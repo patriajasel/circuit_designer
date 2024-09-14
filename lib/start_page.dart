@@ -1,6 +1,4 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 
 class StartPage extends StatefulWidget {
   const StartPage({super.key});
@@ -32,9 +30,8 @@ class _StartPageState extends State<StartPage> {
                         child: const Text(
                           "Other Options",
                           style: TextStyle(
-                              fontSize: 20.0,
-                              fontFamily: "Protest",
-                              letterSpacing: 2.0,
+                              fontSize: 18.0,
+                              fontFamily: "Arvo",
                               color: Colors.white),
                         ),
                       ),
@@ -85,7 +82,7 @@ class _StartPageState extends State<StartPage> {
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(15))),
                       onPressed: () {
-                        // ! Button Action here when creating a new design
+                        _showNewDesignDialog(context);
                       },
                       child: const Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -101,8 +98,7 @@ class _StartPageState extends State<StartPage> {
                             'Create New Design',
                             style: TextStyle(
                                 fontSize: 16.0,
-                                fontFamily: "Protest",
-                                letterSpacing: 2.0,
+                                fontFamily: "Arvo",
                                 color: Colors.white),
                           ),
                         ],
@@ -127,8 +123,7 @@ class _StartPageState extends State<StartPage> {
                                 "Recent Projects",
                                 style: TextStyle(
                                     fontSize: 16.0,
-                                    fontFamily: "Protest",
-                                    letterSpacing: 2.0,
+                                    fontFamily: "Arvo",
                                     color: Colors.white),
                               ),
                             ),
@@ -183,10 +178,7 @@ Container _sideMenuOptions(String optionsName, IconData icon) {
           Text(
             optionsName,
             style: const TextStyle(
-                fontSize: 16.0,
-                fontFamily: "Protest",
-                letterSpacing: 2.0,
-                color: Colors.white),
+                fontSize: 14.0, fontFamily: "Arvo", color: Colors.white),
           ),
         ],
       ),
@@ -209,4 +201,21 @@ Container _sideIconButtons(IconData icon) {
       ),
     ),
   );
+}
+
+void _showNewDesignDialog(BuildContext context) {
+  showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("New Design"),
+          content: Column(
+            children: [
+              Container(
+                height: 100,
+              )
+            ],
+          ),
+        );
+      });
 }
