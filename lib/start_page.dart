@@ -1,3 +1,4 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
 class StartPage extends StatefulWidget {
@@ -7,7 +8,26 @@ class StartPage extends StatefulWidget {
   State<StartPage> createState() => _StartPageState();
 }
 
+// TODO: Add comments to the new code added
+// TODO: Make the popup window border less rounded
+// TODO: Make File Directory Textfield not writeable
+// TODO: Make File Name Textfield character restrictions
+// TODO: Make Dropdown menu for picking pcb Sizes
+// TODO: Make Actions button like Proceed and Cancel
+
 class _StartPageState extends State<StartPage> {
+  String? directoryPath;
+
+  Future<void> _pickDirectory() async {
+    String? selectedDirectory = await FilePicker.platform.getDirectoryPath();
+
+    if (selectedDirectory != null) {
+      setState(() {
+        directoryPath = selectedDirectory;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -82,7 +102,7 @@ class _StartPageState extends State<StartPage> {
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(15))),
                       onPressed: () {
-                        _showNewDesignDialog(context);
+                        _showNewDesignDialog(context, _pickDirectory);
                       },
                       child: const Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -203,18 +223,67 @@ Container _sideIconButtons(IconData icon) {
   );
 }
 
-void _showNewDesignDialog(BuildContext context) {
+void _showNewDesignDialog(BuildContext context, Function() pickDirectory) {
+  TextEditingController fileName = TextEditingController();
   showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text("New Design"),
-          content: Column(
-            children: [
-              Container(
-                height: 100,
-              )
-            ],
+          titleTextStyle: const TextStyle(
+              fontSize: 16.0, fontFamily: "Arvo", color: Colors.black),
+          content: SizedBox(
+            width: 300,
+            child: Column(
+              children: [
+                const Divider(),
+                const SizedBox(
+                  height: 50,
+                ),
+                SizedBox(
+                  height: 40,
+                  child: TextField(
+                    controller: fileName,
+                    decoration: InputDecoration(
+                        suffixIcon: IconButton(
+                            onPressed: () {
+                              fileName.clear();
+                            },
+                            icon: const Icon(
+                              Icons.clear,
+                              size: 12,
+                            )),
+                        border: const OutlineInputBorder(),
+                        hintText: "File Name",
+                        hintStyle: const TextStyle(
+                          fontSize: 12.0,
+                        )),
+                  ),
+                ),
+                const SizedBox(
+                  height: 20,
+                ),
+                SizedBox(
+                  height: 40,
+                  child: TextField(
+                    decoration: InputDecoration(
+                        suffixIcon: IconButton(
+                            onPressed: () {
+                              pickDirectory();
+                            },
+                            icon: const Icon(
+                              Icons.folder_open,
+                              size: 12,
+                            )),
+                        border: const OutlineInputBorder(),
+                        hintText: "File Directory",
+                        hintStyle: const TextStyle(
+                          fontSize: 12.0,
+                        )),
+                  ),
+                )
+              ],
+            ),
           ),
         );
       });
