@@ -2,7 +2,10 @@
     "cSpell.words": [
         "Cupertino",
         "libserialport",
-        "Maximizable"
+        "Maximizable",
+        "Minimizable",
+        "polyline",
+        "Sketchboard"
     ],
     "files.associations": {
         "format": "cpp",

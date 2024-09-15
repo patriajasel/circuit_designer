@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:circuit_designer/sketch_designer.dart';
 import 'package:circuit_designer/start_page.dart';
 import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
@@ -26,10 +27,15 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Circuit Designer',
-      home: StartPage(),
+      home: const StartPage(),
+
+      // * Navigation Names
+      routes: {
+        '/Sketch': (context) => const Sketchboard(),
+      },
     );
   }
 }
