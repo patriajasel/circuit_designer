@@ -48,7 +48,7 @@ class _SketchboardState extends State<Sketchboard> {
     );
   }
 
-  // Define the shortcuts
+  // * Shortcuts here
   Map<LogicalKeySet, Intent> _buildShortcuts() {
     return {
       LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.keyN):
@@ -72,7 +72,7 @@ class _SketchboardState extends State<Sketchboard> {
     };
   }
 
-  // Map the shortcuts to actions
+  // * Mapping the shortcuts to Actions
   Map<Type, Action<Intent>> _buildActions() {
     return {
       ActivateIntent: CallbackAction<ActivateIntent>(
@@ -112,6 +112,7 @@ class _SketchboardState extends State<Sketchboard> {
     };
   }
 
+  // * Building File Menu in Menu bar
   SubmenuButton _buildFileMenu() {
     return SubmenuButton(
       menuChildren: [
@@ -135,6 +136,7 @@ class _SketchboardState extends State<Sketchboard> {
     );
   }
 
+  // * Building Edit Menu in Menu bar
   SubmenuButton _buildEditMenu() {
     return SubmenuButton(
       menuChildren: [
@@ -152,18 +154,21 @@ class _SketchboardState extends State<Sketchboard> {
     );
   }
 
+  // * Building Settings Menu in Menu bar
   SubmenuButton _buildSettingsMenu() {
     return SubmenuButton(menuChildren: [
       _addMenuItem('Open Configuration', () => print('Settings clicked')),
     ], child: const Text("Settings"));
   }
 
+  // * Building Help Menu in Menu bar
   SubmenuButton _buildHelpMenu() {
     return SubmenuButton(menuChildren: [
       _addMenuItem('About Us', () => print('Help clicked')),
     ], child: const Text("Help"));
   }
 
+  // * Adding Menu Item for menu
   MenuItemButton _addMenuItem(String text, VoidCallback onPressed,
       {String? shortcut}) {
     return MenuItemButton(
@@ -178,7 +183,7 @@ class _SketchboardState extends State<Sketchboard> {
   }
 }
 
-// A custom intent to handle different menu actions
+// * A custom intent to handle different menu actions
 class ActivateIntent extends Intent {
   const ActivateIntent(this.action);
   final String action;
