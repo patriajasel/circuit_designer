@@ -3,6 +3,7 @@
 import 'package:circuit_designer/sketch_menubar.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:window_manager/window_manager.dart';
 
 class Sketchboard extends StatefulWidget {
@@ -53,11 +54,10 @@ class _SketchboardState extends State<Sketchboard> {
                       child: Column(
                         children: [
                           Expanded(
-                              child: Container(
-                            decoration: BoxDecoration(
-                              border: Border.all(width: 2),
-                              color: const Color(0xFFF9FCFE),
-                            ),
+                              child: Card(
+                            shape: const RoundedRectangleBorder(
+                                borderRadius: BorderRadius.zero),
+                            elevation: 10.0,
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -68,7 +68,7 @@ class _SketchboardState extends State<Sketchboard> {
                                     child: Text(
                                       "Components",
                                       style: TextStyle(
-                                          fontFamily: "Arvo", fontSize: 18.0),
+                                          fontFamily: "Arvo", fontSize: 16.0),
                                     ),
                                   ),
                                 ),
@@ -81,13 +81,21 @@ class _SketchboardState extends State<Sketchboard> {
                                   child: Padding(
                                     padding: const EdgeInsets.all(8.0),
                                     child: CupertinoSearchTextField(
+                                      backgroundColor: Colors.white,
                                       placeholder: "Search Components...",
-                                      decoration: BoxDecoration(
-                                          border: Border.all(width: 2),
-                                          borderRadius:
-                                              BorderRadius.circular(5)),
                                       style: const TextStyle(fontSize: 14.0),
                                       controller: _searchTextController,
+                                    ),
+                                  ),
+                                ),
+                                Expanded(
+                                  child: Container(
+                                    width: double.infinity,
+                                    margin: const EdgeInsets.all(8.0),
+                                    child: const Card(
+                                      elevation: 0,
+                                      color: Colors.white,
+                                      child: Text("Component Library here"),
                                     ),
                                   ),
                                 )

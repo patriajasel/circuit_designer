@@ -1,12 +1,21 @@
 {
     "cSpell.words": [
+        "AAAPC",
         "autofocus",
+        "CAPC",
+        "CAPRR",
         "Cupertino",
         "libserialport",
         "Maximizable",
+        "Microcontrollers",
         "Minimizable",
         "polyline",
-        "Sketchboard"
+        "RCEC",
+        "RDEC",
+        "RDER",
+        "SAMTEC",
+        "Sketchboard",
+        "SOIC"
     ],
     "files.associations": {
         "format": "cpp",
