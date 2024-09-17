@@ -1,7 +1,9 @@
 // ignore_for_file: avoid_print
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
 
 class MenuActions {
   Map<LogicalKeySet, Intent> buildShortcuts() {
@@ -110,8 +112,16 @@ class MenuActions {
   }
 
   // * Building Settings Menu in Menu bar
-  SubmenuButton buildSettingsMenu() {
+  SubmenuButton buildSettingsMenu(
+      BuildContext context,
+      Function(int, int) updateCanvasSize,
+      int currentCanvasHeight,
+      int currentCanvasWidth) {
     return SubmenuButton(menuChildren: [
+      _addMenuItem(
+          'Canvas Settings',
+          () => canvasSettings(context, updateCanvasSize, currentCanvasHeight,
+              currentCanvasWidth)),
       _addMenuItem('Open Configuration', () => print('Settings clicked')),
     ], child: const Text("Settings"));
   }
@@ -136,6 +146,181 @@ class MenuActions {
             : null,
         child: Text(text));
   }
+}
+
+void canvasSettings(BuildContext context, Function(int, int) updateCanvasSize,
+    int currentCanvasHeight, int currentCanvasWidth) {
+  int? selectedHeight = currentCanvasHeight;
+  int? selectedWidth = currentCanvasWidth;
+
+  List<int> canvasHeightList = [2, 3, 4, 5, 6];
+  List<int> canvasWidthList = [2, 3, 4, 5, 6];
+  showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          content: SizedBox(
+            height: 500,
+            width: 400,
+            child: StatefulBuilder(
+              builder: (BuildContext context, StateSetter setState) {
+                return Column(
+                  children: [
+                    const Text(
+                      "Canvas Settings",
+                      style:
+                          TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                    ),
+                    const Divider(
+                      thickness: 2,
+                      color: Colors.black,
+                    ),
+                    const SizedBox(height: 20),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: DropdownButtonFormField<String>(
+                            decoration: InputDecoration(
+                              labelText: 'Select Height',
+                              labelStyle: const TextStyle(
+                                fontSize: 20,
+                                color: Colors.black, // Label color
+                              ),
+                              filled: true,
+                              fillColor:
+                                  Colors.grey.shade100, // Background fill color
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(
+                                    15.0), // Rounded corners
+                                borderSide: BorderSide(
+                                  color: Colors.grey.shade400,
+                                  width: 2.0,
+                                ),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(15.0),
+                                borderSide: BorderSide(
+                                  color: Colors.grey.shade400,
+                                  width: 2.0, // Normal border
+                                ),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(15.0),
+                                borderSide: const BorderSide(
+                                  color: Colors.grey,
+                                  width: 2.0, // Focused border color
+                                ),
+                              ),
+                              contentPadding: const EdgeInsets.symmetric(
+                                vertical: 16.0, // Vertical padding
+                                horizontal: 12.0, // Horizontal padding
+                              ),
+                              // Dropdown arrow
+                            ),
+                            value: selectedHeight?.toString(),
+                            elevation: 16,
+                            style: const TextStyle(
+                                color: Colors.black, fontSize: 18),
+                            onChanged: (String? newHeight) {
+                              if (newHeight != null) {
+                                // Update the local state inside the dialog
+                                setState(() {
+                                  selectedHeight = int.parse(newHeight);
+                                });
+                              }
+                            },
+                            items: canvasHeightList
+                                .map<DropdownMenuItem<String>>((int value) {
+                              return DropdownMenuItem<String>(
+                                value: value.toString(),
+                                child: Text(value.toString()),
+                              );
+                            }).toList(),
+                          ),
+                        ),
+                        const SizedBox(width: 20),
+                        Expanded(
+                          child: DropdownButtonFormField<String>(
+                            // Assign a unique key to avoid conflicts
+                            decoration: InputDecoration(
+                              labelText: 'Select Width',
+                              labelStyle: const TextStyle(
+                                fontSize: 20,
+                                color: Colors.black, // Label color
+                              ),
+                              filled: true,
+                              fillColor:
+                                  Colors.grey.shade100, // Background fill color
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(
+                                    15.0), // Rounded corners
+                                borderSide: BorderSide(
+                                  color: Colors.grey.shade400,
+                                  width: 2.0,
+                                ),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(15.0),
+                                borderSide: BorderSide(
+                                  color: Colors.grey.shade400,
+                                  width: 2.0, // Normal border
+                                ),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(15.0),
+                                borderSide: const BorderSide(
+                                  color: Colors.grey,
+                                  width: 2.0, // Focused border color
+                                ),
+                              ),
+                              contentPadding: const EdgeInsets.symmetric(
+                                vertical: 16.0, // Vertical padding
+                                horizontal: 12.0, // Horizontal padding
+                              ),
+                            ),
+                            value: selectedWidth?.toString(),
+                            elevation: 16,
+                            style: const TextStyle(
+                                color: Colors.black, fontSize: 18),
+                            onChanged: (String? newWidth) {
+                              if (newWidth != null) {
+                                // Update the selectedWidth state variable
+                                setState(() {
+                                  selectedWidth = int.parse(newWidth);
+                                });
+                              }
+                            },
+                            items: canvasWidthList
+                                .map<DropdownMenuItem<String>>((int value) {
+                              return DropdownMenuItem<String>(
+                                value: value.toString(),
+                                child: Text(value.toString()),
+                              );
+                            }).toList(),
+                          ),
+                        )
+                      ],
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+          actions: [
+            ElevatedButton(
+                onPressed: () {
+                  updateCanvasSize(selectedHeight!, selectedWidth!);
+                  Navigator.pop(context);
+                },
+                child: Text("Proceed")),
+            ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: Text("Cancel")),
+          ],
+        );
+      });
 }
 
 // * A custom intent to handle different menu actions

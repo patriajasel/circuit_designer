@@ -21,6 +21,11 @@ class Sketchboard extends StatefulWidget {
 
 class _SketchboardState extends State<Sketchboard> {
   List<Package> packages = [];
+  double canvasWidthInPixels = 200.0;
+  double canvasHeightInPixels = 200.0;
+
+  int canvasHeightInInches = 2;
+  int canvasWidthInInches = 2;
 
   @override
   void initState() {
@@ -30,6 +35,15 @@ class _SketchboardState extends State<Sketchboard> {
 
     loadJsonFiles();
     super.initState();
+  }
+
+  void updateCanvasSize(int height, int width) {
+    setState(() {
+      canvasHeightInPixels = 100.0 * double.parse(height.toString());
+      canvasWidthInPixels = 100.0 * double.parse(width.toString());
+      canvasHeightInInches = height;
+      canvasWidthInInches = width;
+    });
   }
 
   Future<void> loadJsonFiles() async {
@@ -56,9 +70,6 @@ class _SketchboardState extends State<Sketchboard> {
     MenuActions menuActions = MenuActions();
     CompAndPartsSection sideSection = CompAndPartsSection();
 
-    double canvasWidth = 200.0;
-    double canvasHeight = 200.0;
-
     return Scaffold(
       body: Shortcuts(
         shortcuts: menuActions.buildShortcuts(),
@@ -73,7 +84,8 @@ class _SketchboardState extends State<Sketchboard> {
                   child: MenuBar(children: [
                     menuActions.buildFileMenu(),
                     menuActions.buildEditMenu(),
-                    menuActions.buildSettingsMenu(),
+                    menuActions.buildSettingsMenu(context, updateCanvasSize,
+                        canvasHeightInInches, canvasWidthInInches),
                     menuActions.buildHelpMenu()
                   ]),
                 ),
@@ -86,8 +98,8 @@ class _SketchboardState extends State<Sketchboard> {
                       color: Colors.grey.shade800,
                       child: Center(
                         child: Container(
-                          height: canvasHeight,
-                          width: canvasWidth,
+                          height: canvasHeightInPixels,
+                          width: canvasWidthInPixels,
                           color: Colors.white,
                         ),
                       ),
