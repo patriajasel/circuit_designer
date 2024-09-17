@@ -1,10 +1,16 @@
 // ignore_for_file: avoid_print
 
+import 'dart:convert';
+
+import 'package:circuit_designer/sketch_comp_library.dart';
 import 'package:circuit_designer/sketch_menubar.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:window_manager/window_manager.dart';
+import 'dart:io';
+
+import 'data_footprints.dart';
+
+// TODO: Make it that whenever a component is clicked, it will be added to the canvas
 
 class Sketchboard extends StatefulWidget {
   const Sketchboard({super.key});
@@ -14,19 +20,41 @@ class Sketchboard extends StatefulWidget {
 }
 
 class _SketchboardState extends State<Sketchboard> {
+  List<Package> packages = [];
+
   @override
   void initState() {
     WindowManager.instance.setMinimumSize(const Size(1280, 720));
     WindowManager.instance.setMaximizable(true);
     WindowManager.instance.maximize();
+
+    loadJsonFiles();
     super.initState();
+  }
+
+  Future<void> loadJsonFiles() async {
+    const folderPath = 'lib/data/component_libraries/';
+    final folder = Directory(folderPath);
+
+    if (await folder.exists()) {
+      final files = folder.listSync();
+      for (var file in files) {
+        if (file is File && file.path.endsWith('.json')) {
+          final jsonString = await file.readAsString();
+          final jsonData = jsonDecode(jsonString);
+          final package = Package.fromJson(jsonData);
+          setState(() {
+            packages.add(package);
+          });
+        }
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     MenuActions menuActions = MenuActions();
-
-    final TextEditingController _searchTextController = TextEditingController();
+    CompAndPartsSection sideSection = CompAndPartsSection();
 
     return Scaffold(
       body: Shortcuts(
@@ -48,71 +76,7 @@ class _SketchboardState extends State<Sketchboard> {
                 ),
                 Expanded(
                     child: Row(
-                  children: [
-                    SizedBox(
-                      width: 300.0,
-                      child: Column(
-                        children: [
-                          Expanded(
-                              child: Card(
-                            shape: const RoundedRectangleBorder(
-                                borderRadius: BorderRadius.zero),
-                            elevation: 10.0,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const SizedBox(
-                                  child: Padding(
-                                    padding: EdgeInsets.only(
-                                        top: 8.0, left: 8.0, right: 8.0),
-                                    child: Text(
-                                      "Components",
-                                      style: TextStyle(
-                                          fontFamily: "Arvo", fontSize: 16.0),
-                                    ),
-                                  ),
-                                ),
-                                const Padding(
-                                  padding:
-                                      EdgeInsets.only(left: 8.0, right: 8.0),
-                                  child: Divider(thickness: 2),
-                                ),
-                                SizedBox(
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: CupertinoSearchTextField(
-                                      backgroundColor: Colors.white,
-                                      placeholder: "Search Components...",
-                                      style: const TextStyle(fontSize: 14.0),
-                                      controller: _searchTextController,
-                                    ),
-                                  ),
-                                ),
-                                Expanded(
-                                  child: Container(
-                                    width: double.infinity,
-                                    margin: const EdgeInsets.all(8.0),
-                                    child: const Card(
-                                      elevation: 0,
-                                      color: Colors.white,
-                                      child: Text("Component Library here"),
-                                    ),
-                                  ),
-                                )
-                              ],
-                            ),
-                          )),
-                          Expanded(
-                            child: Container(
-                              color: Colors.blue,
-                              width: double.infinity,
-                              child: const Text("Hierarchy Section"),
-                            ),
-                          )
-                        ],
-                      ),
-                    )
-                  ],
+                  children: [sideSection.sideSection(packages)],
                 ))
               ],
             ),
