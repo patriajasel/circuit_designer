@@ -266,7 +266,7 @@
             "_drill": "2.3"
           }
         ],
-        "_name": "BEL_SS-52000-004"
+        "_name": "SS-52000-004 USB Conn"
       },
       {
         "wire": [
@@ -573,7 +573,7 @@
             "_diameter": "0.985"
           }
         ],
-        "_name": "SAMTEC_TS-121-G-AA"
+        "_name": "TS-121-G-AA Connector"
       }
     ]
   }

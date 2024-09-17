@@ -2,7 +2,7 @@
     "packageType": "Batteries",
     "components": [
       {
-        "_name": "BAT_1072",
+        "_name": "1072 Batt Holder",
         "wire": [
           {
             "_x1": "-7.975",
@@ -431,7 +431,7 @@
             "_layer": "1"
           }
         ],
-        "_name": "TE_1746142-1"
+        "_name": "1746142-1 Batt Connector"
       },
       {
         "wire": [
@@ -615,7 +615,7 @@
           "_y": "5.46",
           "_drill": "1.19"
         },
-        "_name": "BAT_BA1AAAPC"
+        "_name": "BA1AAAPC Batt Holder"
       },
       {
         "text": [
@@ -768,7 +768,7 @@
           "_y": "0",
           "_drill": "1.5"
         },
-        "_name": "BAT_BH23APC"
+        "_name": "BH23APC Batt Holder"
       },
       {
         "wire": [
@@ -1235,7 +1235,7 @@
             "_drill": "1.52"
           }
         ],
-        "_name": "BAT_BH600"
+        "_name": "BH600 Batt Holder"
       },
       {
         "wire": [
@@ -1423,7 +1423,7 @@
             "_rot": "R270"
           }
         ],
-        "_name": "BAT_BS-1225-PC"
+        "_name": "BS-1225-PC Batt Holder"
       },
       {
         "circle": [
@@ -1615,7 +1615,7 @@
             "_roundness": "25"
           }
         ],
-        "_name": "SOIC65P490X110-8N"
+        "_name": "STC3100IST Batt Monitor IC"
       }
     ]
   }

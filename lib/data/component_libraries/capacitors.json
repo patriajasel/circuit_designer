@@ -133,7 +133,7 @@
             "_diameter": "1.28"
           }
         ],
-        "_name": "CAP_DE1E3RA472MN4AP01F"
+        "_name": "DE1E3RA472MN4AP01F Capacitor"
       },
       {
         "wire": [
@@ -257,7 +257,7 @@
             "_diameter": "1.45"
           }
         ],
-        "_name": "CAPRR750W60L900T500H900B"
+        "_name": "DE2E3KY332MA3BM02F Capacitor"
       },
       {
         "text": [
@@ -361,7 +361,7 @@
             "_layer": "1"
           }
         ],
-        "_name": "CAPC2012X140N"
+        "_name": "GCM21BC71A475KA67L Capacitor"
       },
       {
         "text": [
@@ -465,7 +465,7 @@
             "_layer": "1"
           }
         ],
-        "_name": "CAPC2012X140N"
+        "_name": "GCM21BR70J106KE21L Capacitor"
       },
       {
         "text": [
@@ -569,7 +569,7 @@
             "_layer": "1"
           }
         ],
-        "_name": "CAPC1608X90N"
+        "_name": "GCM188R71C105KA49D Capacitor"
       },
       {
         "text": [
@@ -673,7 +673,7 @@
             "_layer": "1"
           }
         ],
-        "_name": "CAPC1005X65N"
+        "_name": "GRM155R60J106ME15D Capacitor"
       },
       {
         "text": [
@@ -793,7 +793,7 @@
             "_layer": "1"
           }
         ],
-        "_name": "CAPC6153X670N"
+        "_name": "KCM55WR71J226MH01K Capacitor"
       },
       {
         "text": [
@@ -943,7 +943,7 @@
             "_diameter": "1.15"
           }
         ],
-        "_name": "CAP_RCEC72A475MWM1H03A"
+        "_name": "RCEC72A475MWM1H03A Capacitor"
       },
       {
         "wire": [
@@ -1076,7 +1076,7 @@
             "_diameter": "1.15"
           }
         ],
-        "_name": "CAP_RDEC71E475K2P1H03B"
+        "_name": "RDEC71E475K2P1H03B Capacitor"
       },
       {
         "wire": [
@@ -1225,7 +1225,7 @@
             "_diameter": "1.15"
           }
         ],
-        "_name": "CAP_RDER71H105K2K1H03B"
+        "_name": "RDER71H105K2K1H03B Capacitor"
       },
       {
         "wire": [
@@ -1358,7 +1358,7 @@
             "_diameter": "1.15"
           }
         ],
-        "_name": "CAP_RDER72J104K4M1H03A"
+        "_name": "RDER72J104K4M1H03A Capacitor"
       },
       {
         "wire": [
@@ -1491,7 +1491,7 @@
             "_diameter": "1.15"
           }
         ],
-        "_name": "CAP_RDER72J474MUB1H03B"
+        "_name": "RDER72J474MUB1H03B Capacitor"
       }
     ]
   }

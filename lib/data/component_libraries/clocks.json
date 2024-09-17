@@ -408,7 +408,7 @@
             "_layer": "1"
           }
         ],
-        "_name": "21-0041B_8"
+        "_name": "DS3231MZ/V+ RTC"
       },
       {
         "circle": [
@@ -744,7 +744,7 @@
             "_roundness": "25"
           }
         ],
-        "_name": "SOIC127P1032X265-24N"
+        "_name": "DS12885SN IC RTC"
       },
       {
         "circle": [
@@ -936,7 +936,7 @@
             "_roundness": "25"
           }
         ],
-        "_name": "SOIC127P600X175-8N"
+        "_name": "LS7083N-S IC Encoder"
       },
       {
         "circle": [
@@ -1128,7 +1128,7 @@
             "_roundness": "25"
           }
         ],
-        "_name": "SOIC127P600X175-8N"
+        "_name": "LS7084N-S IC Clock Converter"
       },
       {
         "circle": [
@@ -1320,7 +1320,7 @@
             "_roundness": "25"
           }
         ],
-        "_name": "SOIC127P600X175-8N"
+        "_name": "LS7184N-S IC Clock Converter"
       },
       {
         "text": [
@@ -1776,7 +1776,7 @@
             "_roundness": "25"
           }
         ],
-        "_name": "QFP80P900X900X160-32N"
+        "_name": "MAX9317AECJ Clock Driver"
       },
       {
         "wire": [
@@ -2196,7 +2196,7 @@
             "_layer": "1"
           }
         ],
-        "_name": "21-0078H"
+        "_name": "MAX9320EKA+T IC Clock"
       }
     ]
   }

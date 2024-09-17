@@ -1,10 +1,14 @@
 {
     "cSpell.words": [
         "AAAPC",
+        "AECJ",
+        "AREF",
         "autofocus",
         "CAPC",
         "CAPRR",
         "Cupertino",
+        "DIOM",
+        "IOREF",
         "libserialport",
         "Maximizable",
         "Microcontrollers",
@@ -15,6 +19,7 @@
         "RDER",
         "SAMTEC",
         "Sketchboard",
+        "SMCW",
         "SOIC"
     ],
     "files.associations": {

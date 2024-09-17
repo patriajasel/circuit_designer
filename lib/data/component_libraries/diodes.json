@@ -167,7 +167,7 @@
             "_layer": "1"
           }
         ],
-        "_name": "DIOM4325X250N"
+        "_name": "1SMA5926 Diode"
       },
       {
         "wire": [
@@ -380,7 +380,7 @@
             "_drill": "1.1"
           }
         ],
-        "_name": "DIOAD1300W80L670D310"
+        "_name": "2M190Z Diode"
       },
       {
         "wire": [
@@ -554,7 +554,7 @@
             "_roundness": "25"
           }
         ],
-        "_name": "SOT65P210X110-6N"
+        "_name": "BAT54BRW-7-F Diode"
       },
       {
         "wire": [
@@ -735,7 +735,7 @@
             "_layer": "1"
           }
         ],
-        "_name": "SOT95P240X110-3N"
+        "_name": "BAT54S-7-F Diode"
       },
       {
         "wire": [
@@ -903,7 +903,7 @@
             "_layer": "1"
           }
         ],
-        "_name": "SODFL3718X102N"
+        "_name": "BZD27C180PW Diode"
       }
     ]
   }

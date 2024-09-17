@@ -56,6 +56,9 @@ class _SketchboardState extends State<Sketchboard> {
     MenuActions menuActions = MenuActions();
     CompAndPartsSection sideSection = CompAndPartsSection();
 
+    double canvasWidth = 200.0;
+    double canvasHeight = 200.0;
+
     return Scaffold(
       body: Shortcuts(
         shortcuts: menuActions.buildShortcuts(),
@@ -75,9 +78,22 @@ class _SketchboardState extends State<Sketchboard> {
                   ]),
                 ),
                 Expanded(
-                    child: Row(
-                  children: [sideSection.sideSection(packages)],
-                ))
+                    child: Row(children: [
+                  sideSection.sideSection(packages),
+                  Expanded(
+                    child: Container(
+                      height: double.infinity,
+                      color: Colors.grey.shade800,
+                      child: Center(
+                        child: Container(
+                          height: canvasHeight,
+                          width: canvasWidth,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ]))
               ],
             ),
           ),

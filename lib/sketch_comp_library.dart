@@ -68,7 +68,7 @@ class CompAndPartsSection {
                         return ListTile(
                           title: Text(component.name),
                           onTap: () {
-                            print("Component Clicked: ${component.name}");
+                            print("Package: ${package.components}");
                           },
                         );
                       }).toList(),

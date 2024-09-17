@@ -139,7 +139,7 @@
           "_y": "0",
           "_drill": "2"
         },
-        "_name": "LEDC3216X110N"
+        "_name": "5976001607F LED"
       },
       {
         "text": [
@@ -275,10 +275,9 @@
             "_layer": "1"
           }
         ],
-        "_name": "LED_7012X1"
+        "_name": "7012X1 LED"
       },
       {
-        "description": "<B>WL-SMCW SMT Mono-color Chip LED Waterclear\n<Br><Br></B>Size: 0603, SMT, 2pins\n<Br>1.6x0.8x0.7mm(LXWXH)",
         "wire": [
           {
             "_x1": "0.8",
@@ -449,10 +448,9 @@
             "_layer": "1"
           }
         ],
-        "_name": "WL-SMCW_0603"
+        "_name": "WL-SMCW_0603 LED"
       },
       {
-        "description": "<b>WL-TMRC THT Mono-color Round Color,\n</b><br><br>Size: 3mm without stopper, THT, 2pins",
         "text": [
           {
             "_x": "0",
@@ -580,10 +578,9 @@
             "_drill": "1"
           }
         ],
-        "_name": "WL-TMRC_3MM"
+        "_name": "WL-TMRC_3MM LED"
       },
       {
-        "description": "<b>WL-TMRW THT Mono-color Round Waterclear\n</b><br><br>5mm without stoppe,THT, 2pins",
         "text": [
           {
             "_x": "0",
@@ -709,7 +706,7 @@
             "_drill": "1"
           }
         ],
-        "_name": "WL-TMRW_5MM"
+        "_name": "WL-TMRW_5MM LED"
       }
     ]
   }
