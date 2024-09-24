@@ -169,7 +169,7 @@ class Smd {
         name: json['_name'],
         x: json['_x'],
         y: json['_y'],
-        dx: json['_dy'],
+        dx: json['_dx'],
         dy: json['_dy'],
         layer: json['_layer']);
   }

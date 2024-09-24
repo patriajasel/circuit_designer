@@ -1,11 +1,17 @@
 // ignore_for_file: avoid_print
 
+import 'package:circuit_designer/draggable_footprints.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import 'data_footprints.dart';
 
 class CompAndPartsSection {
+  final Function(DraggableFootprints) passComp;
+  final Offset position;
+
+  CompAndPartsSection({required this.position, required this.passComp});
+
   SizedBox sideSection(List<Package> packages) {
     return SizedBox(
       width: 300.0,
@@ -68,7 +74,8 @@ class CompAndPartsSection {
                         return ListTile(
                           title: Text(component.name),
                           onTap: () {
-                            print("Package: ${package.components}");
+                            passComp(DraggableFootprints(
+                                component: component, position: position));
                           },
                         );
                       }).toList(),

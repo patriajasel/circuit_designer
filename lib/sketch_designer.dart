@@ -2,15 +2,15 @@
 
 import 'dart:convert';
 
+import 'package:circuit_designer/draggable_footprints.dart';
 import 'package:circuit_designer/sketch_comp_library.dart';
+import 'package:circuit_designer/sketch_footprint_painter.dart';
 import 'package:circuit_designer/sketch_menubar.dart';
 import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
 import 'dart:io';
 
 import 'data_footprints.dart';
-
-// TODO: Make it that whenever a component is clicked, it will be added to the canvas
 
 class Sketchboard extends StatefulWidget {
   const Sketchboard({super.key});
@@ -27,11 +27,25 @@ class _SketchboardState extends State<Sketchboard> {
   int canvasHeightInInches = 2;
   int canvasWidthInInches = 2;
 
+  double scale = 1;
+
+  final List<String> toolsIcons = [
+    'lib/assets/images/icon_buttons/rounded_pad.png',
+    'lib/assets/images/icon_buttons/square_pad.png',
+    'lib/assets/images/icon_buttons/oval_pad.png',
+    'lib/assets/images/icon_buttons/rectangle_pad.png',
+    'lib/assets/images/icon_buttons/rectangle_pad.png',
+    'lib/assets/images/icon_buttons/rectangle_pad.png',
+    'lib/assets/images/icon_buttons/rectangle_pad.png',
+  ];
+
+  List<DraggableFootprints> compToDisplay = [];
+
   @override
   void initState() {
-    WindowManager.instance.setMinimumSize(const Size(1280, 720));
-    WindowManager.instance.setMaximizable(true);
+    WindowManager.instance.setMinimumSize(const Size(1920, 1080));
     WindowManager.instance.maximize();
+    WindowManager.instance.setMaximizable(true);
 
     loadJsonFiles();
     super.initState();
@@ -65,10 +79,18 @@ class _SketchboardState extends State<Sketchboard> {
     }
   }
 
+  void addToPainterList(DraggableFootprints comp) {
+    setState(() {
+      compToDisplay.add(comp);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     MenuActions menuActions = MenuActions();
-    CompAndPartsSection sideSection = CompAndPartsSection();
+    CompAndPartsSection sideSection = CompAndPartsSection(
+        passComp: addToPainterList,
+        position: Offset(canvasWidthInPixels / 2, canvasHeightInPixels / 2));
 
     return Scaffold(
       body: Shortcuts(
@@ -90,27 +112,176 @@ class _SketchboardState extends State<Sketchboard> {
                   ]),
                 ),
                 Expanded(
-                    child: Row(children: [
-                  sideSection.sideSection(packages),
-                  Expanded(
-                    child: Container(
-                      height: double.infinity,
-                      color: Colors.grey.shade800,
-                      child: Center(
-                        child: Container(
-                          height: canvasHeightInPixels,
-                          width: canvasWidthInPixels,
-                          color: Colors.white,
+                  child: Row(
+                    children: [
+                      sideSection.sideSection(packages),
+                      Expanded(
+                        child: Stack(
+                          children: [
+                            GestureDetector(
+                              child: Container(
+                                height: double.infinity,
+                                color: Colors.grey.shade800,
+                                child: Center(
+                                  child: Container(
+                                    height: canvasHeightInPixels * scale,
+                                    width: canvasWidthInPixels * scale,
+                                    color: Colors.white,
+                                    child: CustomPaint(
+                                      painter: FootPrintPainter(
+                                          compToDisplay, scale),
+                                      size: Size(canvasWidthInPixels,
+                                          canvasHeightInPixels),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            Positioned(
+                              child: SizedBox(
+                                  height: 400,
+                                  width: 150,
+                                  child: Card(
+                                    shape: const RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.zero),
+                                    child: Column(
+                                      children: [
+                                        const Center(
+                                          child: Text("Tools"),
+                                        ),
+                                        Expanded(
+                                            child: Card(
+                                          child: Container(
+                                            color: Colors.grey,
+                                            child: GridView.builder(
+                                                itemCount: toolsIcons.length,
+                                                physics:
+                                                    const NeverScrollableScrollPhysics(),
+                                                gridDelegate:
+                                                    const SliverGridDelegateWithFixedCrossAxisCount(
+                                                        crossAxisCount: 2),
+                                                itemBuilder: (context, index) {
+                                                  return Padding(
+                                                    padding:
+                                                        const EdgeInsets.all(
+                                                            5.0),
+                                                    child: Container(
+                                                      color: Colors.white,
+                                                      child: IconButton(
+                                                          onPressed: () {},
+                                                          icon: Image.asset(
+                                                              toolsIcons[
+                                                                  index])),
+                                                    ),
+                                                  );
+                                                }),
+                                          ),
+                                        ))
+                                      ],
+                                    ),
+                                  )),
+                            ),
+                            Positioned(
+                                right: 0,
+                                child: SizedBox(
+                                  height: 400,
+                                  width: 100,
+                                  child: Card(
+                                      color: Colors.grey.shade800,
+                                      shape: const RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.zero),
+                                      child: ListView.builder(
+                                          itemCount: 4,
+                                          itemBuilder: (context, index) {
+                                            return Container(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                      vertical: 20),
+                                              child: Container(
+                                                decoration: const BoxDecoration(
+                                                  color: Colors.white,
+                                                  shape: BoxShape.circle,
+                                                ),
+                                                child: IconButton(
+                                                  onPressed: () {
+                                                    getFunction(index);
+                                                  },
+                                                  icon: Icon(
+                                                    getIcon(index),
+                                                    color: Colors.black,
+                                                  ),
+                                                ),
+                                              ),
+                                            );
+                                          })),
+                                ))
+                          ],
                         ),
                       ),
-                    ),
+                    ],
                   ),
-                ]))
+                ),
               ],
             ),
           ),
         ),
       ),
     );
+  }
+
+  void getFunction(int index) {
+    switch (index) {
+      case 0:
+        homeButton();
+      case 1:
+        zoomInButton();
+      case 2:
+        zoomOutButton();
+      case 3:
+        deleteButton();
+    }
+  }
+
+  IconData getIcon(int index) {
+    switch (index) {
+      case 0:
+        return Icons.home;
+      case 1:
+        return Icons.zoom_in;
+      case 2:
+        return Icons.zoom_out;
+      case 3:
+        return Icons.delete;
+      default:
+        return Icons.face;
+    }
+  }
+
+  void homeButton() {
+    print("home button pressed");
+  }
+
+  void zoomInButton() {
+    print("zoom in button pressed");
+    setState(() {
+      scale += 0.2;
+    });
+  }
+
+  void zoomOutButton() {
+    print("zoom out button pressed");
+    if (scale <= 1) {
+      setState(() {
+        scale = 1;
+      });
+    } else {
+      setState(() {
+        scale -= 0.2;
+      });
+    }
+  }
+
+  void deleteButton() {
+    print("delete button pressed");
   }
 }
