@@ -2,7 +2,6 @@
     "packageType": "Batteries",
     "components": [
       {
-        "_name": "1072 Batt Holder",
         "wire": [
           {
             "_x1": "-7.975",
@@ -211,7 +210,8 @@
             "_y": "4",
             "_drill": "1.1"
           }
-        ]
+        ],
+        "_name": "1072 Batt Holder" 
       },
       {
         "wire": [
