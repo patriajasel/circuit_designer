@@ -12,6 +12,7 @@ class CompAndPartsSection {
 
   CompAndPartsSection({required this.position, required this.passComp});
 
+  // This is for the left side panel of Component Library and Parts Section
   SizedBox sideSection(List<Package> packages) {
     return SizedBox(
       width: 300.0,
@@ -21,6 +22,7 @@ class CompAndPartsSection {
     );
   }
 
+  // This is for the Component Library
   Expanded componentLibrary(List<Package> packages) {
     final TextEditingController searchTextController = TextEditingController();
     return Expanded(
@@ -75,7 +77,9 @@ class CompAndPartsSection {
                           title: Text(component.name),
                           onTap: () {
                             passComp(DraggableFootprints(
-                                component: component, position: position));
+                                component: component,
+                                position: position,
+                                isSelected: false));
                           },
                         );
                       }).toList(),
@@ -90,6 +94,7 @@ class CompAndPartsSection {
     ));
   }
 
+  // This is for the Parts Section
   Expanded partSection() {
     return Expanded(
       child: Card(

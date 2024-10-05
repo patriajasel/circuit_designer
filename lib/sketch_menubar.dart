@@ -88,7 +88,7 @@ class MenuActions {
         _addMenuItem('Exit', () => print('Exit clicked'), shortcut: 'Alt + F4'),
       ],
       menuStyle:
-          const MenuStyle(padding: MaterialStatePropertyAll(EdgeInsets.all(5))),
+          const MenuStyle(padding: WidgetStatePropertyAll(EdgeInsets.all(5))),
       child: const Text("File"),
     );
   }
@@ -106,7 +106,7 @@ class MenuActions {
             shortcut: 'Ctrl + V'),
       ],
       menuStyle:
-          const MenuStyle(padding: MaterialStatePropertyAll(EdgeInsets.all(5))),
+          const MenuStyle(padding: WidgetStatePropertyAll(EdgeInsets.all(5))),
       child: const Text("Edit"),
     );
   }
@@ -312,12 +312,12 @@ void canvasSettings(BuildContext context, Function(int, int) updateCanvasSize,
                   updateCanvasSize(selectedHeight!, selectedWidth!);
                   Navigator.pop(context);
                 },
-                child: Text("Proceed")),
+                child: const Text("Proceed")),
             ElevatedButton(
                 onPressed: () {
                   Navigator.pop(context);
                 },
-                child: Text("Cancel")),
+                child: const Text("Cancel")),
           ],
         );
       });

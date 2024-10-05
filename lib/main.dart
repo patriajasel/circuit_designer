@@ -32,7 +32,7 @@ class MyApp extends StatelessWidget {
       title: 'Circuit Designer',
       home: const StartPage(),
 
-      // * Navigation Names
+      // Navigation Names
       routes: {
         '/Sketch': (context) => const Sketchboard(),
       },

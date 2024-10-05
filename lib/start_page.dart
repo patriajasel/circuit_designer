@@ -14,7 +14,7 @@ class _StartPageState extends State<StartPage> {
       body: Row(
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          // * This is the side menu section
+          //  This is the side menu section
           Column(
             children: [
               Expanded(
@@ -60,7 +60,7 @@ class _StartPageState extends State<StartPage> {
             ],
           ),
 
-          // * This is the main section
+          //  This is the main section
           Expanded(
             child: Container(
               color: const Color(0xFF333333),
@@ -87,7 +87,7 @@ class _StartPageState extends State<StartPage> {
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.end,
                                 children: [
-                                  //* This is the section for Searching, Sorting and Deleting recent projects
+                                  // This is the section for Searching, Sorting and Deleting recent projects
                                   _sideIconButtons(Icons.search),
                                   _sideIconButtons(Icons.grid_on),
                                   _sideIconButtons(Icons.delete)
@@ -114,7 +114,7 @@ class _StartPageState extends State<StartPage> {
     );
   }
 
-  // * This is the method for generating Text Navigation buttons.
+  //  This is the method for generating Text Navigation buttons.
   Container _sideMenuOptions(
       String optionsName, IconData icon, String routeName) {
     return Container(
@@ -152,7 +152,7 @@ class _StartPageState extends State<StartPage> {
     );
   }
 
-  // * This is the section for the Recent project Buttons
+  //  This is the section for the Recent project Buttons
 
   Container _sideIconButtons(IconData icon) {
     return Container(
@@ -173,7 +173,7 @@ class _StartPageState extends State<StartPage> {
     );
   }
 
-  // * Navigation Method here
+  //  Navigation Method here
   void _navigator(String routeName) {
     Navigator.pushNamed(context, routeName);
   }

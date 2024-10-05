@@ -22,7 +22,8 @@
         "SAMTEC",
         "Sketchboard",
         "SMCW",
-        "SOIC"
+        "SOIC",
+        "writeln"
     ],
     "files.associations": {
         "format": "cpp",

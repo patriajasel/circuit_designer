@@ -74,6 +74,8 @@ class _SketchboardState extends State<Sketchboard> {
     });
   }
 
+  void saveFileAsSvg() {}
+
   Future<void> loadJsonFiles() async {
     const folderPath = 'lib/data/component_libraries/';
     final folder = Directory(folderPath);
@@ -204,6 +206,7 @@ class _SketchboardState extends State<Sketchboard> {
                                   height: 400,
                                   width: 100,
                                   child: Card(
+                                      elevation: 0,
                                       color: Colors.grey.shade800,
                                       shape: const RoundedRectangleBorder(
                                           borderRadius: BorderRadius.zero),

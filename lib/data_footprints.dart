@@ -1,4 +1,4 @@
-// Define the Component model
+// Initializing the Component model
 class Component {
   final String name;
   final List<TextElement> text;
@@ -45,7 +45,7 @@ class Component {
               .map((e) => Hole.fromJson(e))
               .toList()
           : json['hole'] != null
-              ? [Hole.fromJson(json['hole'])] // Wrap a single object in a list
+              ? [Hole.fromJson(json['hole'])] 
               : []),
       circle: (json['circle'] is List
           ? (json['circle'] as List<dynamic>)
@@ -54,7 +54,7 @@ class Component {
           : json['circle'] != null
               ? [
                   Circle.fromJson(json['circle'])
-                ] // If it's a single circle, wrap it in a list
+                ] 
               : []),
       rectangle: (json['rectangle'] as List<dynamic>?)
               ?.map((e) => Rectangle.fromJson(e))
@@ -66,7 +66,7 @@ class Component {
   }
 }
 
-// Define TextElement model
+// Initializing TextElement model
 class TextElement {
   final String x;
   final String y;
@@ -92,7 +92,7 @@ class TextElement {
   }
 }
 
-// Define Wire model
+// Initializing Wire model
 class Wire {
   final String x1;
   final String y1;
@@ -121,7 +121,7 @@ class Wire {
   }
 }
 
-// Define Pad model
+// Initializing Pad model
 class Pad {
   final String name;
   final String x;
@@ -147,7 +147,7 @@ class Pad {
   }
 }
 
-//Define Smd model
+// Initializing Smd model
 class Smd {
   final String name;
   final String x;
@@ -175,7 +175,7 @@ class Smd {
   }
 }
 
-// Define Hole model
+// Initializing Hole model
 class Hole {
   final String x;
   final String y;
@@ -196,7 +196,7 @@ class Hole {
   }
 }
 
-// Define Circle model
+// Initializing Circle model
 class Circle {
   final String x;
   final String y;
@@ -222,7 +222,7 @@ class Circle {
   }
 }
 
-// Define Circle model
+// Initializing Circle model
 class Rectangle {
   final String x1;
   final String y1;
@@ -248,7 +248,7 @@ class Rectangle {
   }
 }
 
-// Define Polygon model
+// Initializing Polygon model
 class Polygon {
   final List<Vertex> vertices;
   final String width;
@@ -267,7 +267,7 @@ class Polygon {
   }
 }
 
-// Define Vertex model for the Polygon
+// Initializing Vertex model for the Polygon
 class Vertex {
   final String x;
   final String y;
@@ -284,7 +284,7 @@ class Vertex {
   }
 }
 
-// Define the Package model
+// Initializing the Package model
 class Package {
   final String packageType;
   final List<Component> components;
