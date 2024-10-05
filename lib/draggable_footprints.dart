@@ -6,6 +6,11 @@ class DraggableFootprints {
   final Component component;
   Offset position;
   bool isSelected;
+  bool isHovered;
 
-  DraggableFootprints({required this.component, required this.position, required this.isSelected});
+  DraggableFootprints(
+      {required this.component,
+      required this.position,
+      required this.isSelected,
+      required this.isHovered});
 }

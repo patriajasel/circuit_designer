@@ -6,23 +6,38 @@ import 'package:flutter/material.dart';
 
 import 'data_footprints.dart';
 
-class CompAndPartsSection {
+class CompAndPartsSection extends StatefulWidget {
   final Function(DraggableFootprints) passComp;
   final Offset position;
+  final List<Package> packages;
+  final List<DraggableFootprints> footprints;
+  const CompAndPartsSection(
+      {super.key,
+      required this.position,
+      required this.passComp,
+      required this.packages,
+      required this.footprints});
 
-  CompAndPartsSection({required this.position, required this.passComp});
+  @override
+  State<CompAndPartsSection> createState() => _CompAndPartsSectionState();
+}
 
-  // This is for the left side panel of Component Library and Parts Section
-  SizedBox sideSection(List<Package> packages) {
+class _CompAndPartsSectionState extends State<CompAndPartsSection> {
+  bool isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
     return SizedBox(
       width: 300.0,
       child: Column(
-        children: [componentLibrary(packages), partSection()],
+        children: [
+          componentLibrary(widget.packages),
+          partSection(widget.footprints)
+        ],
       ),
     );
   }
 
-  // This is for the Component Library
   Expanded componentLibrary(List<Package> packages) {
     final TextEditingController searchTextController = TextEditingController();
     return Expanded(
@@ -76,10 +91,11 @@ class CompAndPartsSection {
                         return ListTile(
                           title: Text(component.name),
                           onTap: () {
-                            passComp(DraggableFootprints(
+                            widget.passComp(DraggableFootprints(
                                 component: component,
-                                position: position,
-                                isSelected: false));
+                                position: widget.position,
+                                isSelected: false,
+                                isHovered: false));
                           },
                         );
                       }).toList(),
@@ -94,8 +110,7 @@ class CompAndPartsSection {
     ));
   }
 
-  // This is for the Parts Section
-  Expanded partSection() {
+  Expanded partSection(List<DraggableFootprints> footprints) {
     return Expanded(
       child: Card(
         shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
@@ -116,11 +131,54 @@ class CompAndPartsSection {
               child: Container(
                 width: double.infinity,
                 margin: const EdgeInsets.all(8.0),
-                child: const Card(
-                  shape:
-                      RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+                child: Card(
+                  shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.zero),
                   elevation: 0,
                   color: Colors.white,
+                  child: ListView.builder(
+                    itemCount: footprints.length,
+                    itemBuilder: (context, index) {
+                      return GestureDetector(
+                        onTap: () {
+                          footprints[index].isSelected =
+                              !footprints[index].isSelected;
+                        },
+                        child: MouseRegion(
+                          onEnter: (PointerEvent event) {
+                            setState(() {
+                              footprints[index].isHovered = true;
+                            });
+                          },
+                          onExit: (PointerEvent event) {
+                            setState(() {
+                              footprints[index].isHovered = false;
+                            });
+                          },
+                          child: Container(
+                            clipBehavior: Clip.none,
+                            padding: const EdgeInsets.all(10.0),
+                            color: footprints[index].isHovered
+                                ? Colors.blue.shade50
+                                : footprints[index].isSelected
+                                    ? Colors.blue.shade100
+                                    : null,
+                            height: 40,
+                            width: double.infinity,
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Text(
+                                  footprints[index].component.name,
+                                  style: const TextStyle(fontSize: 16.0),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
                 ),
               ),
             )

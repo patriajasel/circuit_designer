@@ -104,9 +104,7 @@ class _SketchboardState extends State<Sketchboard> {
   @override
   Widget build(BuildContext context) {
     MenuActions menuActions = MenuActions();
-    CompAndPartsSection sideSection = CompAndPartsSection(
-        passComp: addToPainterList,
-        position: Offset(canvasWidthInPixels / 2, canvasHeightInPixels / 2));
+    Offset position = Offset(canvasWidthInPixels / 2, canvasHeightInPixels / 2);
 
     return Scaffold(
       body: Shortcuts(
@@ -130,7 +128,12 @@ class _SketchboardState extends State<Sketchboard> {
                 Expanded(
                   child: Row(
                     children: [
-                      sideSection.sideSection(packages),
+                      CompAndPartsSection(
+                        packages: packages,
+                        footprints: compToDisplay,
+                        position: position,
+                        passComp: addToPainterList,
+                      ),
                       Expanded(
                         child: Stack(
                           children: [
@@ -143,12 +146,14 @@ class _SketchboardState extends State<Sketchboard> {
                                   autofocus: true,
                                   onKeyEvent: _onKeyEvent,
                                   child: GestureDetector(
+                                    onTap: () {},
                                     onTapDown: _onTapDown,
                                     onPanStart: ((details) {
                                       setState(() {
                                         selectedFootprint =
                                             getComponentAtPosition(
                                                 details.localPosition / scale);
+                                        selectedFootprint?.isSelected = true;
                                       });
                                     }),
                                     onPanUpdate: ((details) {
@@ -174,6 +179,7 @@ class _SketchboardState extends State<Sketchboard> {
                                     }),
                                     onPanEnd: ((details) {
                                       setState(() {
+                                        selectedFootprint?.isSelected = false;
                                         selectedFootprint = null;
                                       });
                                     }),
@@ -224,7 +230,9 @@ class _SketchboardState extends State<Sketchboard> {
                                                 ),
                                                 child: IconButton(
                                                   onPressed: () {
-                                                    getFunction(index);
+                                                    getFunction(
+                                                      index,
+                                                    );
                                                   },
                                                   icon: Icon(
                                                     getIcon(index),
@@ -306,7 +314,13 @@ class _SketchboardState extends State<Sketchboard> {
   }
 
   void deleteButton() {
-    print("delete button pressed");
+    for (int i = 0; i < compToDisplay.length; i++) {
+      setState(() {
+        if (compToDisplay[i].isSelected == true) {
+          compToDisplay.remove(compToDisplay[i]);
+        }
+      });
+    }
   }
 
   void traceButton() {
@@ -395,6 +409,12 @@ class _SketchboardState extends State<Sketchboard> {
           print("lines added");
         });
       }
+    } else {
+      setState(() {
+        selectedFootprint =
+            getComponentAtPosition(details.localPosition / scale);
+        selectedFootprint?.isSelected = !selectedFootprint!.isSelected;
+      });
     }
   }
 
