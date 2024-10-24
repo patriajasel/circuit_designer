@@ -34,6 +34,8 @@ class FootPrintPainter extends CustomPainter {
           ..strokeWidth = lines[i].thickness * scale // Use the line's thickness
           ..style = PaintingStyle.stroke;
 
+        print("Line Thickness: ${lines[i].thickness}");
+
         Offset start = lines[i].start * scale;
         Offset end = lines[i].end * scale;
 

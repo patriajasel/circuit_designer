@@ -15,6 +15,7 @@ class CompAndPartsSection extends StatefulWidget {
   final List<DraggableFootprints> footprints;
   final List<Line> lines;
   final Function rebuildState;
+  final Function updateLines;
   const CompAndPartsSection(
       {super.key,
       required this.position,
@@ -22,7 +23,8 @@ class CompAndPartsSection extends StatefulWidget {
       required this.packages,
       required this.footprints,
       required this.lines,
-      required this.rebuildState});
+      required this.rebuildState,
+      required this.updateLines});
 
   @override
   State<CompAndPartsSection> createState() => _CompAndPartsSectionState();
@@ -121,6 +123,7 @@ class _CompAndPartsSectionState extends State<CompAndPartsSection> {
   }
 
   Expanded partSection(List<DraggableFootprints> footprints, List<Line> lines) {
+    final TextEditingController lineWidth = TextEditingController(text: "1.0");
     return Expanded(
       child: Card(
         shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
@@ -218,9 +221,94 @@ class _CompAndPartsSectionState extends State<CompAndPartsSection> {
                     itemBuilder: (context, index) {
                       return GestureDetector(
                         onDoubleTap: () {
-                          for (var line in lines) {
-                            line.thickness = 2.0;
-                          }
+                          showDialog(
+                              context: context,
+                              builder: (builder) {
+                                return AlertDialog(
+                                  actionsPadding: EdgeInsets.zero,
+                                  actions: [
+                                    Center(
+                                      child: Container(
+                                        height: 200,
+                                        width: 200,
+                                        decoration: BoxDecoration(
+                                            borderRadius:
+                                                BorderRadius.circular(5)),
+                                        child: Column(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.start,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.center,
+                                          children: [
+                                            const Padding(
+                                              padding: EdgeInsets.all(5.0),
+                                              child: Text(
+                                                "Enter Line Width",
+                                                style: TextStyle(
+                                                    fontFamily: "Arvo",
+                                                    fontSize: 16),
+                                              ),
+                                            ),
+                                            Padding(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                      vertical: 30,
+                                                      horizontal: 10),
+                                              child: TextField(
+                                                controller: lineWidth,
+                                                decoration: const InputDecoration(
+                                                    hintText: "in millimeter",
+                                                    labelText: "Line Width",
+                                                    border: OutlineInputBorder(
+                                                        borderRadius:
+                                                            BorderRadius.all(
+                                                                Radius.circular(
+                                                                    10)))),
+                                              ),
+                                            ),
+                                            Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              children: [
+                                                ElevatedButton(
+                                                  onPressed: () {
+                                                    for (var line in lines) {
+                                                      setState(() {
+                                                        if (line.isSelected) {
+                                                          // Modify the line thickness
+                                                          line.thickness =
+                                                              double.parse(
+                                                                  lineWidth
+                                                                      .text);
+                                                        }
+                                                      });
+                                                    }
+                                                    // Make sure to pass a new list reference to trigger rebuild
+                                                    widget.updateLines(
+                                                        List<Line>.from(lines));
+
+                                                    widget.rebuildState();
+                                                    Navigator.pop(context);
+                                                  },
+                                                  child: const Text("Proceed"),
+                                                ),
+                                                const SizedBox(
+                                                  width: 5,
+                                                ),
+                                                ElevatedButton(
+                                                    onPressed: () {
+                                                      Navigator.pop(context);
+                                                    },
+                                                    child: const Text("Cancel"))
+                                              ],
+                                            )
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              });
                         },
                         onTap: () {
                           setState(() {

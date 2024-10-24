@@ -79,6 +79,12 @@ class _SketchboardState extends State<Sketchboard> {
     });
   }
 
+  void updateLineWidth(List<Line> updatedLines) {
+    setState(() {
+      lines = List.from(updatedLines); // Create a new instance of the list
+    });
+  }
+
   void saveFileAsSvg() {}
 
   Future<void> loadJsonFiles() async {
@@ -140,6 +146,7 @@ class _SketchboardState extends State<Sketchboard> {
                         passComp: addToPainterList,
                         lines: lines,
                         rebuildState: rebuildState,
+                        updateLines: updateLineWidth,
                       ),
                       Expanded(
                         child: Stack(
@@ -219,16 +226,6 @@ class _SketchboardState extends State<Sketchboard> {
                                           if (selectedLines != null) {
                                             setState(() {
                                               for (var line in selectedLines!) {
-                                                // Move the start or end point based on the moveStart flag
-                                                if (line.end.dx -
-                                                        (line.start.dx +
-                                                            (details.delta.dx /
-                                                                scale)) <
-                                                    2) {
-                                                  print(
-                                                      "Offset: ${line.end.dx - (line.start.dx + (details.delta.dx / scale))}");
-                                                }
-
                                                 if (line.moveStart == true) {
                                                   // Move the start point
                                                   line.start = line.start +
@@ -238,6 +235,7 @@ class _SketchboardState extends State<Sketchboard> {
                                                       line.start,
                                                       canvasWidthInPixels,
                                                       canvasHeightInPixels);
+
                                                   if (compToDisplay
                                                       .isNotEmpty) {
                                                     DraggableFootprints?
@@ -277,6 +275,7 @@ class _SketchboardState extends State<Sketchboard> {
                                                       line.end,
                                                       canvasWidthInPixels,
                                                       canvasHeightInPixels);
+
                                                   if (compToDisplay
                                                       .isNotEmpty) {
                                                     DraggableFootprints?
@@ -442,6 +441,15 @@ class _SketchboardState extends State<Sketchboard> {
         ),
       ),
     );
+  }
+
+  bool isHorizontallyAligned(Line line) {
+    return (line.start.dy - line.end.dy).abs() <
+        1e-3; // A small threshold to account for floating point precision
+  }
+
+  bool isVerticallyAligned(Line line) {
+    return (line.start.dx - line.end.dx).abs() < 1e-3;
   }
 
   void getFunction(int index) {
