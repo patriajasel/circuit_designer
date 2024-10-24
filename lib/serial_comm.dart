@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_libserialport/flutter_libserialport.dart';
 import 'dart:typed_data';
@@ -119,6 +121,40 @@ class _SerialCommunicationPageState extends State<SerialCommunicationPage> {
     }
   }
 
+  // Method to listen for GRBL response
+  Future<String> _waitForGRBLResponse() async {
+    Completer<String> completer = Completer();
+
+    if (reader != null) {
+      reader!.stream.listen((data) {
+        final response = String.fromCharCodes(data);
+
+        // Append the new data to the buffer
+        responseBuffer.write(response);
+
+        // Check if the response contains a newline character, which signifies the end of the response
+        if (response.contains('\n')) {
+          setState(() {
+            grblResponse = responseBuffer.toString().trim();
+            responseBuffer.clear(); // Clear the buffer for the next response
+          });
+
+          // Complete the completer with the GRBL response
+          completer.complete(grblResponse);
+
+          // Print the response to the debug console
+          print('GRBL Response: $grblResponse');
+        }
+      });
+    } else {
+      completer.completeError(
+          'SerialPortReader not initialized or no port connected.');
+    }
+
+    // Return the future which will complete when the response is received
+    return completer.future;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -131,10 +167,10 @@ class _SerialCommunicationPageState extends State<SerialCommunicationPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Dropdown to select a serial port
-            Text('Select Serial Port:'),
+            const Text('Select Serial Port:'),
             DropdownButton<String>(
               value: availablePorts.isNotEmpty ? availablePorts.first : null,
-              hint: Text('Select a port'),
+              hint: const Text('Select a port'),
               onChanged: (String? newValue) {
                 if (newValue != null) {
                   _connectToPort(newValue);
@@ -148,7 +184,7 @@ class _SerialCommunicationPageState extends State<SerialCommunicationPage> {
                 );
               }).toList(),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
 
             // Send G-code button
             ElevatedButton(

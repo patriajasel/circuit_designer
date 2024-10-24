@@ -23,16 +23,16 @@ class Component {
 
   factory Component.fromJson(Map<String, dynamic> json) {
     return Component(
-      name: json['_name'] ?? '',
+      name: json['name'] ?? '',
       text: (json['text'] as List<dynamic>?)
               ?.map((e) => TextElement.fromJson(e))
               .toList() ??
           [],
-      wire: (json['wire'] as List<dynamic>?)
+      wire: (json['wires'] as List<dynamic>?)
               ?.map((e) => Wire.fromJson(e))
               .toList() ??
           [],
-      pad: (json['pad'] as List<dynamic>?)
+      pad: (json['pads'] as List<dynamic>?)
               ?.map((e) => Pad.fromJson(e))
               .toList() ??
           [],
@@ -40,38 +40,36 @@ class Component {
               ?.map((e) => Smd.fromJson(e))
               .toList() ??
           [],
-      hole: (json['hole'] is List
-          ? (json['hole'] as List<dynamic>)
+      hole: (json['holes'] is List
+          ? (json['holes'] as List<dynamic>)
               .map((e) => Hole.fromJson(e))
               .toList()
-          : json['hole'] != null
-              ? [Hole.fromJson(json['hole'])] 
+          : json['holes'] != null
+              ? [Hole.fromJson(json['hole'])]
               : []),
-      circle: (json['circle'] is List
-          ? (json['circle'] as List<dynamic>)
+      circle: (json['circles'] is List
+          ? (json['circles'] as List<dynamic>)
               .map((e) => Circle.fromJson(e))
               .toList()
-          : json['circle'] != null
-              ? [
-                  Circle.fromJson(json['circle'])
-                ] 
+          : json['circles'] != null
+              ? [Circle.fromJson(json['circle'])]
               : []),
-      rectangle: (json['rectangle'] as List<dynamic>?)
+      rectangle: (json['rectangles'] as List<dynamic>?)
               ?.map((e) => Rectangle.fromJson(e))
               .toList() ??
           [],
       polygon:
-          json['polygon'] != null ? Polygon.fromJson(json['polygon']) : null,
+          json['polygons'] != null ? Polygon.fromJson(json['polygon']) : null,
     );
   }
 }
 
 // Initializing TextElement model
 class TextElement {
-  final String x;
-  final String y;
-  final String size;
-  final String layer;
+  final double x;
+  final double y;
+  final double size;
+  final double layer;
   final String text;
 
   TextElement(
@@ -83,23 +81,23 @@ class TextElement {
 
   factory TextElement.fromJson(Map<String, dynamic> json) {
     return TextElement(
-      x: json['_x'],
-      y: json['_y'],
-      size: json['_size'],
-      layer: json['_layer'],
-      text: json['__text'],
+      x: json['x'].toDouble(),
+      y: json['y'].toDouble(),
+      size: json['size'].toDouble(),
+      layer: json['layer'].toDouble(),
+      text: json['text'],
     );
   }
 }
 
 // Initializing Wire model
 class Wire {
-  final String x1;
-  final String y1;
-  final String x2;
-  final String y2;
-  final String width;
-  final String layer;
+  final double x1;
+  final double y1;
+  final double x2;
+  final double y2;
+  final double width;
+  final double layer;
 
   Wire(
       {required this.x1,
@@ -111,12 +109,12 @@ class Wire {
 
   factory Wire.fromJson(Map<String, dynamic> json) {
     return Wire(
-      x1: json['_x1'],
-      y1: json['_y1'],
-      x2: json['_x2'],
-      y2: json['_y2'],
-      width: json['_width'],
-      layer: json['_layer'],
+      x1: json['x1'].toDouble(),
+      y1: json['y1'].toDouble(),
+      x2: json['x2'].toDouble(),
+      y2: json['y2'].toDouble(),
+      width: json['width'].toDouble(),
+      layer: json['layer'].toDouble(),
     );
   }
 }
@@ -124,9 +122,9 @@ class Wire {
 // Initializing Pad model
 class Pad {
   final String name;
-  final String x;
-  final String y;
-  final String drill;
+  final double x;
+  final double y;
+  final double drill;
   final String? shape;
 
   Pad(
@@ -138,11 +136,11 @@ class Pad {
 
   factory Pad.fromJson(Map<String, dynamic> json) {
     return Pad(
-      name: json['_name'],
-      x: json['_x'],
-      y: json['_y'],
-      drill: json['_drill'],
-      shape: json['_shape'],
+      name: json['name'],
+      x: json['x'].toDouble(),
+      y: json['y'].toDouble(),
+      drill: json['drill'].toDouble(),
+      shape: json['shape'],
     );
   }
 }
@@ -150,11 +148,11 @@ class Pad {
 // Initializing Smd model
 class Smd {
   final String name;
-  final String x;
-  final String y;
-  final String dx;
-  final String dy;
-  final String layer;
+  final double x;
+  final double y;
+  final double dx;
+  final double dy;
+  final double layer;
 
   Smd(
       {required this.name,
@@ -166,20 +164,20 @@ class Smd {
 
   factory Smd.fromJson(Map<String, dynamic> json) {
     return Smd(
-        name: json['_name'],
-        x: json['_x'],
-        y: json['_y'],
-        dx: json['_dx'],
-        dy: json['_dy'],
-        layer: json['_layer']);
+        name: json['name'],
+        x: json['x'].toDouble(),
+        y: json['y'].toDouble(),
+        dx: json['dx'].toDouble(),
+        dy: json['dy'].toDouble(),
+        layer: json['layer'].toDouble());
   }
 }
 
 // Initializing Hole model
 class Hole {
-  final String x;
-  final String y;
-  final String drill;
+  final double x;
+  final double y;
+  final double drill;
 
   Hole({
     required this.x,
@@ -189,20 +187,20 @@ class Hole {
 
   factory Hole.fromJson(Map<String, dynamic> json) {
     return Hole(
-      x: json['_x'],
-      y: json['_y'],
-      drill: json['_drill'],
+      x: json['x'].toDouble(),
+      y: json['y'].toDouble(),
+      drill: json['drill'].toDouble(),
     );
   }
 }
 
 // Initializing Circle model
 class Circle {
-  final String x;
-  final String y;
-  final String radius;
-  final String width;
-  final String layer;
+  final double x;
+  final double y;
+  final double radius;
+  final double width;
+  final double layer;
 
   Circle(
       {required this.x,
@@ -213,22 +211,22 @@ class Circle {
 
   factory Circle.fromJson(Map<String, dynamic> json) {
     return Circle(
-      x: json['_x'],
-      y: json['_y'],
-      radius: json['_radius'],
-      width: json['_width'],
-      layer: json['_layer'],
+      x: json['x'].toDouble(),
+      y: json['y'].toDouble(),
+      radius: json['radius'].toDouble(),
+      width: json['width'].toDouble(),
+      layer: json['layer'].toDouble(),
     );
   }
 }
 
 // Initializing Circle model
 class Rectangle {
-  final String x1;
-  final String y1;
-  final String x2;
-  final String y2;
-  final String layer;
+  final double x1;
+  final double y1;
+  final double x2;
+  final double y2;
+  final double layer;
 
   Rectangle(
       {required this.x1,
@@ -239,11 +237,11 @@ class Rectangle {
 
   factory Rectangle.fromJson(Map<String, dynamic> json) {
     return Rectangle(
-      x1: json['_x1'],
-      y1: json['_y1'],
-      x2: json['_x2'],
-      y2: json['_y2'],
-      layer: json['_layer'],
+      x1: json['x1'].toDouble(),
+      y1: json['y1'].toDouble(),
+      x2: json['x2'].toDouble(),
+      y2: json['y2'].toDouble(),
+      layer: json['layer'].toDouble(),
     );
   }
 }
@@ -251,8 +249,8 @@ class Rectangle {
 // Initializing Polygon model
 class Polygon {
   final List<Vertex> vertices;
-  final String width;
-  final String layer;
+  final double width;
+  final double layer;
 
   Polygon({required this.vertices, required this.width, required this.layer});
 
@@ -261,25 +259,25 @@ class Polygon {
       vertices: (json['vertex'] as List<dynamic>)
           .map((e) => Vertex.fromJson(e))
           .toList(),
-      width: json['_width'],
-      layer: json['_layer'],
+      width: json['width'].toDouble(),
+      layer: json['layer'].toDouble(),
     );
   }
 }
 
 // Initializing Vertex model for the Polygon
 class Vertex {
-  final String x;
-  final String y;
-  final String? curve;
+  final double x;
+  final double y;
+  final double? curve;
 
   Vertex({required this.x, required this.y, this.curve});
 
   factory Vertex.fromJson(Map<String, dynamic> json) {
     return Vertex(
-      x: json['_x'],
-      y: json['_y'],
-      curve: json['_curve'],
+      x: json['x'].toDouble(),
+      y: json['y'].toDouble(),
+      curve: json['curve'].toDouble(),
     );
   }
 }

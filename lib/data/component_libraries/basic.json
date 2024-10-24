@@ -4,85 +4,86 @@
       {
         "pad": [
           {
-            "_name": "1",
-            "_x": "0",
-            "_y": "0",
-            "_drill": "1.05"
+            "name": "1",
+            "x": 0.0,
+            "y": 0.0,
+            "drill": 1.05
           }
         ],
-        "_name": "Circle Pad"
+        "name": "Circle Pad"
       },
       {
         "pad": [
           {
-            "_name": "1",
-            "_x": "0",
-            "_y": "0",
-            "_drill": "1.05"
+            "name": "1",
+            "x": 0.0,
+            "y": 0.0,
+            "drill": 1.05
           }
           
         ],
         "smd": [
           {
-            "_name": "1",
-            "_x": "-1.5",
-            "_y": "-1.5",
-            "_dx": "3",
-            "_dy": "3",
-            "_layer": "1"
+            "name": 
+            "1",
+            "x": -1.5,
+            "y": -1.5,
+            "dx": 3.0,
+            "dy": 3.0,
+            "layer": 1.0
           }
         ],
-        "_name": "Square Pad"
+        "name": "Square Pad"
       },
       {
         "pad": [
           {
-            "_name": "1",
-            "_x": "0",
-            "_y": "0",
-            "_drill": "1.05"
+            "name": "1",
+            "x": 0.0,
+            "y": 0.0,
+            "drill": 1.05
           }
           
         ],
         "smd": [
           {
-            "_name": "1",
-            "_x": "-2",
-            "_y": "-1.5",
-            "_dx": "5",
-            "_dy": "3",
-            "_layer": "1"
+            "name": "1",
+            "x": -2.0,
+            "y": -1.5,
+            "dx": 5.0,
+            "dy": 3.0,
+            "layer": 1.0
             
           }
         ],
-        "_name": "Rectangle Pad"
+        "name": "Rectangle Pad"
       },
       {
         "smd": [
           {
-            "_name": "1",
-            "_x": "-1.5",
-            "_y": "-1.5",
-            "_dx": "3",
-            "_dy": "3",
-            "_layer": "1"
+            "name": "1",
+            "x": -1.5,
+            "y": -1.5,
+            "dx": 3.0,
+            "dy": 3.0,
+            "layer": 1.0
           }
         ],
-        "_name": "Square SMD"
+        "name": "Square SMD"
       },
       {
         "smd": [
           {
-            "_name": "1",
-            "_x": "-2",
-            "_y": "-1.5",
-            "_dx": "5",
-            "_dy": "3",
-            "_layer": "1"
+            "name": "1",
+            "x": -2.0,
+            "y": -1.5,
+            "dx": 5.0,
+            "dy": 3.0,
+            "layer": 1.0
             
           }
         ],
-        "_name": "Rectangle SMD"
+        "name": "Rectangle SMD"
       }
       
     ]

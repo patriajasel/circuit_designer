@@ -2,7 +2,9 @@
 
 import 'dart:convert';
 
+import 'package:circuit_designer/cnc_controls.dart';
 import 'package:circuit_designer/draggable_footprints.dart';
+import 'package:circuit_designer/footprints_bounding_box.dart';
 import 'package:circuit_designer/line_traces.dart';
 import 'package:circuit_designer/sketch_comp_library.dart';
 import 'package:circuit_designer/sketch_footprint_painter.dart';
@@ -23,24 +25,28 @@ class Sketchboard extends StatefulWidget {
 
 class _SketchboardState extends State<Sketchboard> {
   List<Package> packages = [];
-  double canvasWidthInPixels = 200.0;
-  double canvasHeightInPixels = 200.0;
+  double canvasWidthInPixels = 25.4 * 2;
+  double canvasHeightInPixels = 25.4 * 2;
 
   int canvasHeightInInches = 2;
   int canvasWidthInInches = 2;
 
-  double scale = 1;
+  double scale = 10;
 
   List<DraggableFootprints> compToDisplay = [];
 
   DraggableFootprints? selectedFootprint;
+  List<Line>? selectedLines;
 
   bool isTracing = false;
   bool isHorizontal = false;
   bool isVertical = false;
   bool isDiagonal = false;
 
+  bool onHoveredPart = false;
+
   Offset? startPoint;
+  Offset? temporaryPoint;
   Offset? currentPoint;
   Offset? endPoint;
 
@@ -50,7 +56,6 @@ class _SketchboardState extends State<Sketchboard> {
 
   @override
   void initState() {
-    WindowManager.instance.setMinimumSize(const Size(1920, 1080));
     WindowManager.instance.maximize();
     WindowManager.instance.setMaximizable(true);
 
@@ -67,8 +72,8 @@ class _SketchboardState extends State<Sketchboard> {
 
   void updateCanvasSize(int height, int width) {
     setState(() {
-      canvasHeightInPixels = 100.0 * double.parse(height.toString());
-      canvasWidthInPixels = 100.0 * double.parse(width.toString());
+      canvasHeightInPixels = 25.4 * double.parse(height.toString());
+      canvasWidthInPixels = 25.4 * double.parse(width.toString());
       canvasHeightInInches = height;
       canvasWidthInInches = width;
     });
@@ -133,79 +138,233 @@ class _SketchboardState extends State<Sketchboard> {
                         footprints: compToDisplay,
                         position: position,
                         passComp: addToPainterList,
+                        lines: lines,
+                        rebuildState: rebuildState,
                       ),
                       Expanded(
                         child: Stack(
                           children: [
-                            Container(
-                              height: double.infinity,
-                              color: Colors.grey.shade800,
-                              child: Center(
-                                child: KeyboardListener(
-                                  focusNode: focusNode,
-                                  autofocus: true,
-                                  onKeyEvent: _onKeyEvent,
-                                  child: GestureDetector(
-                                    onTap: () {},
-                                    onTapDown: _onTapDown,
-                                    onPanStart: ((details) {
-                                      setState(() {
-                                        selectedFootprint =
-                                            getComponentAtPosition(
+                            LayoutBuilder(builder: (context, constraints) {
+                              double interval = constraints.maxWidth / 10;
+                              int divisions = (interval / 20).round();
+                              if (divisions < 1) divisions = 1;
+
+                              return Container(
+                                color: Colors.black,
+                                child: GridPaper(
+                                  color: Colors.grey,
+                                  divisions: divisions,
+                                  interval: interval,
+                                  subdivisions: 1,
+                                  child: Center(
+                                    child: KeyboardListener(
+                                      focusNode: focusNode,
+                                      autofocus: true,
+                                      onKeyEvent: _onKeyEvent,
+                                      child: GestureDetector(
+                                        onTapDown: _onTapDown,
+                                        onPanStart: ((details) {
+                                          setState(() {
+                                            selectedFootprint =
+                                                getComponentAtPosition(
+                                                    details.localPosition /
+                                                        scale);
+                                            selectedFootprint?.isSelected =
+                                                true;
+
+                                            selectedLines = getLinesAtPosition(
                                                 details.localPosition / scale);
-                                        selectedFootprint?.isSelected = true;
-                                      });
-                                    }),
-                                    onPanUpdate: ((details) {
-                                      if (selectedFootprint != null) {
-                                        setState(() {
-                                          // Calculate new position
-                                          Offset newPosition =
-                                              (selectedFootprint!.position) +
-                                                  (details.delta / scale);
 
-                                          // Clamp position within the container's boundaries
-                                          newPosition = clampPosition(
-                                            newPosition,
-                                            canvasWidthInPixels,
-                                            canvasHeightInPixels,
-                                          );
+                                            if (selectedLines != null) {
+                                              for (var line in selectedLines!) {
+                                                line.isSelected = true;
 
-                                          // Update the selected component's position
-                                          selectedFootprint!.position =
-                                              newPosition;
-                                        });
-                                      }
-                                    }),
-                                    onPanEnd: ((details) {
-                                      setState(() {
-                                        selectedFootprint?.isSelected = false;
-                                        selectedFootprint = null;
-                                      });
-                                    }),
-                                    child: MouseRegion(
-                                      onHover: _onMouseMove,
-                                      child: Container(
-                                        height: canvasHeightInPixels * scale,
-                                        width: canvasWidthInPixels * scale,
-                                        color: Colors.white,
-                                        child: CustomPaint(
-                                          painter: FootPrintPainter(
-                                              compToDisplay,
-                                              scale,
-                                              isTracing,
-                                              lines,
-                                              currentPoint,
-                                              startPoint),
-                                          size: Size(canvasWidthInPixels,
-                                              canvasHeightInPixels),
+                                                // Determine if the start or end is closer to the tap and store that information
+                                                double distanceToStart =
+                                                    ((details.localPosition /
+                                                                scale) -
+                                                            line.start)
+                                                        .distance;
+                                                double distanceToEnd =
+                                                    ((details.localPosition /
+                                                                scale) -
+                                                            line.end)
+                                                        .distance;
+
+                                                // Set moveStart to true if start is closer, otherwise false
+                                                line.moveStart =
+                                                    distanceToStart <
+                                                        distanceToEnd;
+                                              }
+                                            }
+                                          });
+                                        }),
+                                        onPanUpdate: ((details) {
+                                          if (selectedFootprint != null) {
+                                            setState(() {
+                                              // Update the position of the selected footprint
+                                              Offset newPosition =
+                                                  (selectedFootprint!
+                                                          .position) +
+                                                      (details.delta / scale);
+                                              newPosition = clampPosition(
+                                                  newPosition,
+                                                  canvasWidthInPixels,
+                                                  canvasHeightInPixels);
+                                              selectedFootprint!.position =
+                                                  newPosition;
+                                            });
+                                          }
+
+                                          if (selectedLines != null) {
+                                            setState(() {
+                                              for (var line in selectedLines!) {
+                                                // Move the start or end point based on the moveStart flag
+                                                if (line.end.dx -
+                                                        (line.start.dx +
+                                                            (details.delta.dx /
+                                                                scale)) <
+                                                    2) {
+                                                  print(
+                                                      "Offset: ${line.end.dx - (line.start.dx + (details.delta.dx / scale))}");
+                                                }
+
+                                                if (line.moveStart == true) {
+                                                  // Move the start point
+                                                  line.start = line.start +
+                                                      (details.delta / scale);
+
+                                                  line.start = clampPosition(
+                                                      line.start,
+                                                      canvasWidthInPixels,
+                                                      canvasHeightInPixels);
+                                                  if (compToDisplay
+                                                      .isNotEmpty) {
+                                                    DraggableFootprints?
+                                                        hoveredFootprint =
+                                                        getComponentAtPosition(
+                                                            details.localPosition /
+                                                                scale);
+                                                    if (hoveredFootprint !=
+                                                        null) {
+                                                      Offset? newLinePosition =
+                                                          getPartsOfFootprint(
+                                                              details.localPosition /
+                                                                  scale,
+                                                              hoveredFootprint);
+
+                                                      if (newLinePosition !=
+                                                          null) {
+                                                        line.start =
+                                                            newLinePosition +
+                                                                hoveredFootprint
+                                                                    .position;
+                                                        print(
+                                                            "New Line Position: $newLinePosition");
+                                                      }
+                                                    } else {
+                                                      print(
+                                                          "No footprint hovered");
+                                                    }
+                                                  }
+                                                } else if (line.moveStart ==
+                                                    false) {
+                                                  // Move the start point
+                                                  line.end = line.end +
+                                                      (details.delta / scale);
+
+                                                  line.end = clampPosition(
+                                                      line.end,
+                                                      canvasWidthInPixels,
+                                                      canvasHeightInPixels);
+                                                  if (compToDisplay
+                                                      .isNotEmpty) {
+                                                    DraggableFootprints?
+                                                        hoveredFootprint =
+                                                        getComponentAtPosition(
+                                                            details.localPosition /
+                                                                scale);
+                                                    if (hoveredFootprint !=
+                                                        null) {
+                                                      Offset? newLinePosition =
+                                                          getPartsOfFootprint(
+                                                              details.localPosition /
+                                                                  scale,
+                                                              hoveredFootprint);
+
+                                                      if (newLinePosition !=
+                                                          null) {
+                                                        line.end =
+                                                            newLinePosition +
+                                                                hoveredFootprint
+                                                                    .position;
+                                                        print(
+                                                            "New Line Position: $newLinePosition");
+                                                      }
+                                                    } else {
+                                                      print(
+                                                          "No footprint hovered");
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            });
+                                          }
+                                        }),
+                                        onPanEnd: ((details) {
+                                          setState(() {
+                                            selectedFootprint?.isSelected =
+                                                false;
+                                            selectedFootprint = null;
+
+                                            if (selectedLines != null) {
+                                              List<Line> tempSelectedLines =
+                                                  List.from(selectedLines!);
+
+                                              for (var line
+                                                  in tempSelectedLines) {
+                                                line.isSelected = false;
+                                                line.moveStart =
+                                                    null; // Reset the moveStart flag after the interaction ends
+                                              }
+
+                                              // Now clear the list after the iteration
+                                              selectedLines!.clear();
+                                            }
+                                            // Instead of modifying selectedLines while iterating, collect changes first
+                                          });
+                                        }),
+                                        child: MouseRegion(
+                                          onHover: _onMouseMove,
+                                          child: Container(
+                                            height:
+                                                canvasHeightInPixels * scale,
+                                            width: canvasWidthInPixels * scale,
+                                            decoration: BoxDecoration(
+                                              color: Colors.transparent,
+                                              border: Border.all(
+                                                  color: Colors.purple,
+                                                  width: 4),
+                                            ),
+                                            child: CustomPaint(
+                                              painter: FootPrintPainter(
+                                                  compToDisplay,
+                                                  scale,
+                                                  isTracing,
+                                                  lines,
+                                                  currentPoint,
+                                                  startPoint),
+                                              size: Size(canvasWidthInPixels,
+                                                  canvasHeightInPixels),
+                                            ),
+                                          ),
                                         ),
                                       ),
                                     ),
                                   ),
                                 ),
-                              ),
-                            ),
+                              );
+                            }),
                             Positioned(
                                 right: 0,
                                 child: SizedBox(
@@ -213,7 +372,7 @@ class _SketchboardState extends State<Sketchboard> {
                                   width: 100,
                                   child: Card(
                                       elevation: 0,
-                                      color: Colors.grey.shade800,
+                                      color: Colors.transparent,
                                       shape: const RoundedRectangleBorder(
                                           borderRadius: BorderRadius.zero),
                                       child: ListView.builder(
@@ -242,7 +401,35 @@ class _SketchboardState extends State<Sketchboard> {
                                               ),
                                             );
                                           })),
-                                ))
+                                )),
+                            Positioned(
+                              right: 20.0,
+                              bottom: 20.0,
+                              child: ElevatedButton(
+                                  onPressed: () {
+                                    Navigator.of(context).push(
+                                        MaterialPageRoute(
+                                            builder: (context) =>
+                                                const CncControls()));
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                      shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(10.0))),
+                                  child: const Padding(
+                                    padding: EdgeInsets.all(10.0),
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Icon(
+                                          Icons.memory,
+                                        ),
+                                        Text("Proceed to PCB Making")
+                                      ],
+                                    ),
+                                  )),
+                            )
                           ],
                         ),
                       ),
@@ -261,14 +448,19 @@ class _SketchboardState extends State<Sketchboard> {
     switch (index) {
       case 0:
         homeButton();
+        break;
       case 1:
         zoomInButton();
+        break;
       case 2:
         zoomOutButton();
+        break;
       case 3:
         deleteButton();
+        break;
       case 4:
         traceButton();
+        break;
     }
   }
 
@@ -296,7 +488,7 @@ class _SketchboardState extends State<Sketchboard> {
   void zoomInButton() {
     print("zoom in button pressed");
     setState(() {
-      scale += 0.2;
+      scale += 1;
       print(canvasHeightInPixels * scale);
       print(canvasWidthInPixels * scale);
     });
@@ -306,7 +498,7 @@ class _SketchboardState extends State<Sketchboard> {
     print("zoom out button pressed");
     setState(() {
       if (scale > 1.0) {
-        scale -= 0.2;
+        scale -= 1;
         print(canvasHeightInPixels * scale);
         print(canvasWidthInPixels * scale);
       }
@@ -314,13 +506,26 @@ class _SketchboardState extends State<Sketchboard> {
   }
 
   void deleteButton() {
+    List<DraggableFootprints> itemsToRemove = [];
+    List<Line> linesToRemove = [];
+
     for (int i = 0; i < compToDisplay.length; i++) {
-      setState(() {
-        if (compToDisplay[i].isSelected == true) {
-          compToDisplay.remove(compToDisplay[i]);
-        }
-      });
+      if (compToDisplay[i].isSelected == true) {
+        itemsToRemove.add(compToDisplay[i]);
+      }
     }
+
+    for (int i = 0; i < lines.length; i++) {
+      if (lines[i].isSelected == true) {
+        linesToRemove.add(lines[i]);
+      }
+    }
+
+    setState(() {
+      compToDisplay
+          .removeWhere((footprint) => itemsToRemove.contains(footprint));
+      lines.removeWhere((lines) => linesToRemove.contains(lines));
+    });
   }
 
   void traceButton() {
@@ -341,16 +546,76 @@ class _SketchboardState extends State<Sketchboard> {
 
   DraggableFootprints? getComponentAtPosition(Offset localPosition) {
     for (var draggableFootprint in compToDisplay) {
-      // Define a hitbox around each component's position (for simplicity, using a rectangle)
-      const hitboxSize = 10.0;
-      if ((localPosition.dx - draggableFootprint.position.dx).abs() <
-              hitboxSize &&
-          (localPosition.dy - draggableFootprint.position.dy).abs() <
-              hitboxSize) {
+      BoundingBox boundingBox = draggableFootprint.boundingBox;
+
+      // Get the position of the footprint and calculate its bounding box
+      double minX = draggableFootprint.position.dx + boundingBox.minX;
+      double maxX = draggableFootprint.position.dx + boundingBox.maxX;
+      double minY = draggableFootprint.position.dy + boundingBox.minY;
+      double maxY = draggableFootprint.position.dy + boundingBox.maxY;
+
+      // Check if the localPosition is within the bounding box
+      if (localPosition.dx >= minX &&
+          localPosition.dx <= maxX &&
+          localPosition.dy >= minY &&
+          localPosition.dy <= maxY) {
         return draggableFootprint;
       }
     }
     return null;
+  }
+
+  Offset? getPartsOfFootprint(
+      Offset localPosition, DraggableFootprints footprintSelected) {
+    const double hitboxSize = 1.0;
+    bool padSelected = false, smdSelected = false;
+    Offset position = localPosition - footprintSelected.position;
+
+    for (var pads in footprintSelected.component.pad) {
+      if ((position.dx - pads.x).abs() < hitboxSize &&
+          (position.dy - pads.y).abs() < hitboxSize) {
+        padSelected = true;
+        return Offset(pads.x, pads.y);
+      }
+    }
+
+    for (var smd in footprintSelected.component.smd) {
+      if ((position.dx - smd.x).abs() < hitboxSize &&
+          (position.dy - smd.y).abs() < hitboxSize) {
+        smdSelected = true;
+        return Offset(smd.x, smd.y);
+      }
+    }
+
+    if (!padSelected && !smdSelected) {
+      print("No parts selected at: x ${position.dx}, y ${position.dy}");
+      return null;
+    }
+
+    return null;
+  }
+
+  List<Line>? getLinesAtPosition(Offset localPosition) {
+    List<Line> getLines = [];
+    const double hitboxSize =
+        2.0; // Distance in pixels to detect line proximity
+
+    for (var line in lines) {
+      // Check proximity to start point
+      if ((localPosition.dx - line.start.dx).abs() < hitboxSize &&
+          (localPosition.dy - line.start.dy).abs() < hitboxSize) {
+        getLines.add(line);
+      }
+
+      // Check proximity to end point
+      if ((localPosition.dx - line.end.dx).abs() < hitboxSize &&
+          (localPosition.dy - line.end.dy).abs() < hitboxSize) {
+        getLines.add(line);
+      }
+    }
+
+    // Return the list of found lines or an empty list if none were found
+    return getLines.isNotEmpty ? getLines : null;
   }
 
   Offset clampPosition(Offset position, double maxWidth, double maxHeight) {
@@ -366,18 +631,22 @@ class _SketchboardState extends State<Sketchboard> {
 
       if (startPoint == null) {
         setState(() {
-          startPoint = unscaledPosition;
+          if (onHoveredPart) {
+            startPoint = temporaryPoint;
+          } else {
+            startPoint = unscaledPosition;
+          }
         });
       } else if (startPoint != null && endPoint == null) {
-        if (isHorizontal) {
+        if (isHorizontal && !onHoveredPart) {
           setState(() {
             endPoint = Offset(unscaledPosition.dx, startPoint!.dy);
           });
-        } else if (isVertical) {
+        } else if (isVertical && !onHoveredPart) {
           setState(() {
             endPoint = Offset(startPoint!.dx, unscaledPosition.dy);
           });
-        } else if (isDiagonal) {
+        } else if (isDiagonal && !onHoveredPart) {
           // Set the endPoint for diagonal move (45-degree line in any direction)
           setState(() {
             double deltaX = unscaledPosition.dx - startPoint!.dx;
@@ -396,14 +665,24 @@ class _SketchboardState extends State<Sketchboard> {
           });
         } else {
           setState(() {
-            endPoint = unscaledPosition;
+            if (onHoveredPart) {
+              endPoint = temporaryPoint;
+            } else {
+              endPoint = unscaledPosition;
+            }
           });
         }
       }
 
       if (startPoint != null && endPoint != null) {
         setState(() {
-          lines.add(Line(start: startPoint!, end: endPoint!));
+          lines.add(Line(
+              name: "Traces ${lines.length}",
+              start: startPoint!,
+              end: endPoint!,
+              isSelected: false,
+              isHovered: false,
+              thickness: 1.0));
           startPoint = endPoint;
           endPoint = null;
           print("lines added");
@@ -413,7 +692,17 @@ class _SketchboardState extends State<Sketchboard> {
       setState(() {
         selectedFootprint =
             getComponentAtPosition(details.localPosition / scale);
-        selectedFootprint?.isSelected = !selectedFootprint!.isSelected;
+
+        if (selectedFootprint != null) {
+          selectedFootprint?.isSelected = !selectedFootprint!.isSelected;
+        }
+
+        selectedLines = getLinesAtPosition(details.localPosition / scale);
+        if (selectedLines != null) {
+          for (var line in selectedLines!) {
+            line.isSelected = true;
+          }
+        }
       });
     }
   }
@@ -422,6 +711,23 @@ class _SketchboardState extends State<Sketchboard> {
     if (isTracing) {
       // Convert mouse position to unscaled canvas coordinates
       Offset unscaledPosition = event.localPosition / scale;
+
+      DraggableFootprints? hoveredFootprint =
+          getComponentAtPosition(unscaledPosition);
+      Offset? newLinePosition;
+
+      if (hoveredFootprint != null) {
+        newLinePosition =
+            getPartsOfFootprint(unscaledPosition, hoveredFootprint);
+        onHoveredPart = true;
+
+        if (newLinePosition != null) {
+          temporaryPoint = newLinePosition + hoveredFootprint.position;
+        }
+      } else {
+        print("No footprint hovered");
+        onHoveredPart = false;
+      }
 
       if (endPoint == null && startPoint != null) {
         if (isHorizontal) {
@@ -505,5 +811,9 @@ class _SketchboardState extends State<Sketchboard> {
         });
       }
     }
+  }
+
+  void rebuildState() {
+    setState(() {});
   }
 }

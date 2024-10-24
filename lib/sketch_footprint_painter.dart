@@ -16,8 +16,83 @@ class FootPrintPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    // Paint object for circles
+    final circlePaint = Paint()
+      ..color = Colors.red // Color for the start/end circles, can be customized
+      ..style = PaintingStyle.fill; // Filled circle style
+
+    if (lines.isNotEmpty) {
+      Path path = Path();
+
+      // Start drawing from the first point of the first line
+      path.moveTo(lines[0].start.dx * scale, lines[0].start.dy * scale);
+
+      for (int i = 0; i < lines.length; i++) {
+        // Create a new Paint object for each line to set the dynamic thickness
+        final linePaint = Paint()
+          ..color = Colors.yellowAccent.shade700
+          ..strokeWidth = lines[i].thickness * scale // Use the line's thickness
+          ..style = PaintingStyle.stroke;
+
+        Offset start = lines[i].start * scale;
+        Offset end = lines[i].end * scale;
+
+        if (i > 0) {
+          Offset previousEnd = lines[i - 1].end * scale;
+
+          if (start == previousEnd) {
+            // If the lines are connected, draw a smooth curve
+            Offset controlPoint1 = start;
+            Offset controlPoint2 = end;
+
+            path.cubicTo(controlPoint1.dx, controlPoint1.dy, controlPoint2.dx,
+                controlPoint2.dy, end.dx, end.dy);
+          } else {
+            // Move to the next point without connecting if lines are not connected
+            path.moveTo(start.dx, start.dy);
+            path.lineTo(end.dx, end.dy);
+          }
+        } else {
+          // For the first line, just move to the first point and lineTo the end
+          path.lineTo(end.dx, end.dy);
+        }
+
+        // Draw the current path (line) with the corresponding thickness
+        canvas.drawPath(path, linePaint);
+
+        // Now draw the circles, but only if the corresponding line is selected
+        if (lines[i].isSelected == true) {
+          // Draw a circle at the start of the line if it's selected
+          canvas.drawCircle(lines[i].start * scale, 0.3 * scale, circlePaint);
+
+          // Draw a circle at the end of the line if it's selected
+          canvas.drawCircle(lines[i].end * scale, 0.3 * scale, circlePaint);
+        }
+      }
+    }
+
+// If there's a start point and the user is currently drawing, draw the temporary line
+    if (startPoint != null && currentPoint != null) {
+      // Create a Paint object for the temporary line with a default thickness
+      final tempLinePaint = Paint()
+        ..color = Colors.yellowAccent.shade700
+        ..strokeWidth = 1.0 * scale // Default thickness for the temporary line
+        ..style = PaintingStyle.stroke;
+
+      // Scale the start and current positions based on the zoom level
+      Offset scaledStart = startPoint! * scale;
+      Offset scaledCurrent = currentPoint! * scale;
+
+      // Draw the temporary line first
+      canvas.drawLine(scaledStart, scaledCurrent, tempLinePaint);
+
+      // Draw the circles on top of the temporary lines
+      canvas.drawCircle(scaledStart, 0.3 * scale, circlePaint);
+      canvas.drawCircle(scaledCurrent, 0.3 * scale, circlePaint);
+    }
+
     final wirePaint = Paint()
-      ..color = Colors.black
+      ..color = Colors.white
       ..style = PaintingStyle.stroke;
 
     final padPaint = Paint()
@@ -33,14 +108,10 @@ class FootPrintPainter extends CustomPainter {
       final position = draggableComp.position;
 
       for (int i = 0; i < draggableComp.component.wire.length; i++) {
-        final x1 = getMeasurementInPixels(
-            double.parse(draggableComp.component.wire[i].x1));
-        final y1 = getMeasurementInPixels(
-            double.parse(draggableComp.component.wire[i].y1));
-        final x2 = getMeasurementInPixels(
-            double.parse(draggableComp.component.wire[i].x2));
-        final y2 = getMeasurementInPixels(
-            double.parse(draggableComp.component.wire[i].y2));
+        final x1 = getMeasurementInPixels(draggableComp.component.wire[i].x1);
+        final y1 = getMeasurementInPixels(draggableComp.component.wire[i].y1);
+        final x2 = getMeasurementInPixels(draggableComp.component.wire[i].x2);
+        final y2 = getMeasurementInPixels(draggableComp.component.wire[i].y2);
 
         // Offset wires by the unscaled position but scale the wire length
         canvas.drawLine(
@@ -53,30 +124,27 @@ class FootPrintPainter extends CustomPainter {
       // * For Drawing SMDs
 
       for (int i = 0; i < draggableComp.component.smd.length; i++) {
-        final x = getMeasurementInPixels(
-            double.parse(draggableComp.component.smd[i].x));
-        final y = getMeasurementInPixels(
-            double.parse(draggableComp.component.smd[i].y));
-        final dx = getMeasurementInPixels(
-            double.parse(draggableComp.component.smd[i].dx));
-        final dy = getMeasurementInPixels(
-            double.parse(draggableComp.component.smd[i].dy));
+        final x = getMeasurementInPixels(draggableComp.component.smd[i].x);
+        final y = getMeasurementInPixels(draggableComp.component.smd[i].y);
+        final dx = getMeasurementInPixels(draggableComp.component.smd[i].dx);
+        final dy = getMeasurementInPixels(draggableComp.component.smd[i].dy);
 
         // Offset SMDs by the unscaled position and scale the rectangle dimensions
-        Rect rect = Rect.fromLTWH(
-            (position.dx * scale) + (x), (position.dy * scale) + (y), dx, dy);
+        Rect rect = Rect.fromCenter(
+            center:
+                Offset((position.dx * scale) + x, (position.dy * scale) + y),
+            width: dx,
+            height: dy);
         canvas.drawRect(rect, padPaint);
       }
 
       // * For Drawing Pads
 
       for (int i = 0; i < draggableComp.component.pad.length; i++) {
-        final x = getMeasurementInPixels(
-            double.parse(draggableComp.component.pad[i].x));
-        final y = getMeasurementInPixels(
-            double.parse(draggableComp.component.pad[i].y));
-        final diameter = getMeasurementInPixels(
-            double.parse(draggableComp.component.pad[i].drill));
+        final x = getMeasurementInPixels(draggableComp.component.pad[i].x);
+        final y = getMeasurementInPixels(draggableComp.component.pad[i].y);
+        final diameter =
+            getMeasurementInPixels(draggableComp.component.pad[i].drill);
 
         // Offset pads by the unscaled position and scale the diameter
         canvas.drawCircle(
@@ -90,65 +158,7 @@ class FootPrintPainter extends CustomPainter {
           innerPadPaint,
         );
       }
-    }
-
-    final double thresholdDistance =
-        10.0 * scale; // Define a distance threshold
-
-    final paint = Paint()
-      ..color = Colors.yellowAccent.shade700
-      ..strokeWidth = 3.0 * scale
-      ..style = PaintingStyle.stroke;
-
-    if (lines.isNotEmpty) {
-      Path path = Path();
-
-      // Start drawing from the first point of the first line
-      path.moveTo(lines[0].start.dx * scale, lines[0].start.dy * scale);
-
-      for (int i = 0; i < lines.length; i++) {
-        Offset start = lines[i].start * scale;
-        Offset end = lines[i].end * scale;
-
-        if (i > 0) {
-          Offset previousEnd = lines[i - 1].end * scale;
-
-          // Calculate the distance between the end of the previous line and the start of the current one
-          double distance = (start - previousEnd).distance;
-
-          if (distance < thresholdDistance) {
-            // If the distance is smaller than the threshold, connect the points
-            // Calculate control points for cubic Bezier (you can customize these)
-            Offset controlPoint1 = start; // First control point
-            Offset controlPoint2 = end; // Second control point
-
-            // Draw a cubic Bezier curve to the next point
-            path.cubicTo(controlPoint1.dx, controlPoint1.dy, controlPoint2.dx,
-                controlPoint2.dy, end.dx, end.dy);
-          } else {
-            // If the distance is greater than the threshold, move to the next point without connecting
-            path.moveTo(start.dx, start.dy);
-            path.lineTo(end.dx, end.dy);
-          }
-        } else {
-          // Just move to the first point for the first line
-          path.lineTo(end.dx, end.dy);
-        }
-      }
-
-      // Draw the final path as a single connected line
-      canvas.drawPath(path, paint);
-    }
-
-// If there's a start point and the user is currently drawing, draw the temporary line
-    if (startPoint != null && currentPoint != null) {
-      // Scale the start and current positions based on the zoom level
-      Offset scaledStart = startPoint! * scale;
-      Offset scaledCurrent = currentPoint! * scale;
-
-      // Now draw the scaled line
-      canvas.drawLine(scaledStart, scaledCurrent, paint);
-    }
+    } // Define a distance threshold
   }
 
   @override
@@ -157,9 +167,6 @@ class FootPrintPainter extends CustomPainter {
   }
 
   double getMeasurementInPixels(double num) {
-    double ppi = 96.0;
-    return (num / 25.4) *
-        ppi *
-        scale; // Do not scale here, scaling is handled in paint
+    return num * scale;
   }
 }
