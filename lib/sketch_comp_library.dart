@@ -46,6 +46,7 @@ class _CompAndPartsSectionState extends State<CompAndPartsSection> {
     );
   }
 
+  // This is the component library section
   Expanded componentLibrary(List<Package> packages) {
     final TextEditingController searchTextController = TextEditingController();
     return Expanded(
@@ -100,6 +101,7 @@ class _CompAndPartsSectionState extends State<CompAndPartsSection> {
                           title: Text(component.name),
                           onTap: () {
                             setState(() {
+                              // For passing the component and adding dragging features.
                               widget.passComp(DraggableFootprints(
                                   component: component,
                                   position: widget.position,
@@ -122,6 +124,7 @@ class _CompAndPartsSectionState extends State<CompAndPartsSection> {
     ));
   }
 
+  // This is the for the pcb parts section
   Expanded partSection(List<DraggableFootprints> footprints, List<Line> lines) {
     final TextEditingController lineWidth = TextEditingController(text: "1.0");
     return Expanded(
@@ -140,6 +143,8 @@ class _CompAndPartsSectionState extends State<CompAndPartsSection> {
                 ),
               ),
             ),
+
+            // This is the section that shows the footprints inside the canvas
             Expanded(
               child: Container(
                 width: double.infinity,
@@ -197,7 +202,8 @@ class _CompAndPartsSectionState extends State<CompAndPartsSection> {
                 ),
               ),
             ),
-            // For the Line Traces section
+
+            // This is the section that shows the traces inside the canvas
             const SizedBox(
               child: Padding(
                 padding: EdgeInsets.only(top: 8.0, left: 8.0, right: 8.0),
@@ -275,7 +281,6 @@ class _CompAndPartsSectionState extends State<CompAndPartsSection> {
                                                     for (var line in lines) {
                                                       setState(() {
                                                         if (line.isSelected) {
-                                                          // Modify the line thickness
                                                           line.thickness =
                                                               double.parse(
                                                                   lineWidth
@@ -283,7 +288,7 @@ class _CompAndPartsSectionState extends State<CompAndPartsSection> {
                                                         }
                                                       });
                                                     }
-                                                    // Make sure to pass a new list reference to trigger rebuild
+
                                                     widget.updateLines(
                                                         List<Line>.from(lines));
 

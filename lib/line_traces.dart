@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+// This is the class for traces of lines
 class Line {
   String name;
   Offset start;
@@ -8,16 +9,14 @@ class Line {
   bool isHovered;
   double thickness;
 
-  // Add this field to track which point was clicked (start or end)
   bool? moveStart;
 
-  Line({
-    required this.name,
-    required this.start,
-    required this.end,
-    required this.isSelected,
-    required this.isHovered,
-    this.moveStart,
-    required this.thickness // Nullable at first
-  });
+  Line(
+      {required this.name,
+      required this.start,
+      required this.end,
+      required this.isSelected,
+      required this.isHovered,
+      this.moveStart,
+      required this.thickness});
 }

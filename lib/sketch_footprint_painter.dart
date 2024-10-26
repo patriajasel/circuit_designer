@@ -16,10 +16,15 @@ class FootPrintPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    // Paint object for circles
+    // Circle paint indicator
     final circlePaint = Paint()
-      ..color = Colors.red // Color for the start/end circles, can be customized
-      ..style = PaintingStyle.fill; // Filled circle style
+      ..color = Colors.red
+      ..style = PaintingStyle.fill;
+
+    // inner circle indicator
+    final innerCirclePaint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.fill;
 
     if (lines.isNotEmpty) {
       Path path = Path();
@@ -30,7 +35,7 @@ class FootPrintPainter extends CustomPainter {
       for (int i = 0; i < lines.length; i++) {
         // Create a new Paint object for each line to set the dynamic thickness
         final linePaint = Paint()
-          ..color = Colors.yellowAccent.shade700
+          ..color = Colors.black
           ..strokeWidth = lines[i].thickness * scale // Use the line's thickness
           ..style = PaintingStyle.stroke;
 
@@ -63,13 +68,18 @@ class FootPrintPainter extends CustomPainter {
         canvas.drawPath(path, linePaint);
 
         // Now draw the circles, but only if the corresponding line is selected
-        if (lines[i].isSelected == true) {
-          // Draw a circle at the start of the line if it's selected
-          canvas.drawCircle(lines[i].start * scale, 0.3 * scale, circlePaint);
+      }
+    }
 
-          // Draw a circle at the end of the line if it's selected
-          canvas.drawCircle(lines[i].end * scale, 0.3 * scale, circlePaint);
-        }
+    for (var line in lines) {
+      if (line.isSelected == true) {
+        // Draw a circle at the start of the line if it's selected
+        canvas.drawCircle(line.start * scale, 0.6 * scale, circlePaint);
+        canvas.drawCircle(line.start * scale, 0.3 * scale, innerCirclePaint);
+
+        // Draw a circle at the end of the line if it's selected
+        canvas.drawCircle(line.end * scale, 0.6 * scale, circlePaint);
+        canvas.drawCircle(line.end * scale, 0.3 * scale, innerCirclePaint);
       }
     }
 
@@ -77,7 +87,7 @@ class FootPrintPainter extends CustomPainter {
     if (startPoint != null && currentPoint != null) {
       // Create a Paint object for the temporary line with a default thickness
       final tempLinePaint = Paint()
-        ..color = Colors.yellowAccent.shade700
+        ..color = Colors.black
         ..strokeWidth = 1.0 * scale // Default thickness for the temporary line
         ..style = PaintingStyle.stroke;
 
@@ -89,20 +99,22 @@ class FootPrintPainter extends CustomPainter {
       canvas.drawLine(scaledStart, scaledCurrent, tempLinePaint);
 
       // Draw the circles on top of the temporary lines
-      canvas.drawCircle(scaledStart, 0.3 * scale, circlePaint);
-      canvas.drawCircle(scaledCurrent, 0.3 * scale, circlePaint);
+      canvas.drawCircle(startPoint! * scale, 0.6 * scale, circlePaint);
+      canvas.drawCircle(startPoint! * scale, 0.3 * scale, innerCirclePaint);
+      canvas.drawCircle(currentPoint! * scale, 0.6 * scale, circlePaint);
+      canvas.drawCircle(currentPoint! * scale, 0.3 * scale, innerCirclePaint);
     }
 
     final wirePaint = Paint()
-      ..color = Colors.white
+      ..color = Colors.grey
       ..style = PaintingStyle.stroke;
 
     final padPaint = Paint()
-      ..color = Colors.yellowAccent.shade700
+      ..color = Colors.black
       ..style = PaintingStyle.fill;
 
-    final outerPadPaint = Paint()..color = Colors.yellowAccent.shade700;
-    final innerPadPaint = Paint()..color = Colors.black;
+    final outerPadPaint = Paint()..color = Colors.black;
+    final innerPadPaint = Paint()..color = Colors.white;
 
     // * For Drawing Wires
     for (var draggableComp in component) {

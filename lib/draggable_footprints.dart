@@ -2,7 +2,7 @@ import 'package:circuit_designer/data_footprints.dart';
 import 'package:circuit_designer/footprints_bounding_box.dart';
 import 'package:flutter/material.dart';
 
-// Initializing the Draggable Footprints Model
+// This is the class for the footprints that can be dragged.
 class DraggableFootprints {
   final Component component;
   Offset position;
