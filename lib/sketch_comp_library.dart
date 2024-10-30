@@ -109,6 +109,7 @@ class _CompAndPartsSectionState extends State<CompAndPartsSection> {
                                   isHovered: false,
                                   boundingBox:
                                       BoundingBox.calculate(component)));
+                                
                             });
                           },
                         );

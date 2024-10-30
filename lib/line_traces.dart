@@ -8,6 +8,8 @@ class Line {
   bool isSelected;
   bool isHovered;
   double thickness;
+  bool startConnected;
+  bool endConnected;
 
   bool? moveStart;
 
@@ -18,5 +20,7 @@ class Line {
       required this.isSelected,
       required this.isHovered,
       this.moveStart,
-      required this.thickness});
+      required this.thickness,
+      required this.startConnected,
+      required this.endConnected});
 }

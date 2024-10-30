@@ -38,9 +38,9 @@ class BoundingBox {
 
     // For Pads Bounding Box
     for (var pad in component.pad) {
-      double radius = pad.drill / 2;
-      updateBounds(pad.x - radius, pad.y - radius);
-      updateBounds(pad.x + radius, pad.y + radius);
+      double diameter = pad.drill;
+      updateBounds(pad.x - diameter, pad.y - diameter);
+      updateBounds(pad.x + diameter, pad.y + diameter);
     }
 
     // For SMD Bounding Box
@@ -79,3 +79,6 @@ class BoundingBox {
     return BoundingBox(minX: minX, minY: minY, maxX: maxX, maxY: maxY);
   }
 }
+
+
+
