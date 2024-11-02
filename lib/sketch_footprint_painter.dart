@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:circuit_designer/data_footprints.dart';
 import 'package:circuit_designer/draggable_footprints.dart';
+import 'package:circuit_designer/footprints_arcs.dart';
 import 'package:circuit_designer/line_traces.dart';
 import 'package:circuit_designer/outline_carve.dart';
 import 'package:flutter/material.dart';
@@ -14,9 +15,10 @@ class FootPrintPainter extends CustomPainter {
   final Offset? currentPoint;
   final Offset? startPoint;
   final bool displayOutline;
+  final Function(List<Arc>, List<ConnectingLines>) passLists;
 
   FootPrintPainter(this.component, this.scale, this.displayOutline, this.lines,
-      this.currentPoint, this.startPoint);
+      this.currentPoint, this.startPoint, this.passLists);
 
   bool isLineIntersect = false;
   bool isLineEqual = false;
@@ -32,6 +34,7 @@ class FootPrintPainter extends CustomPainter {
 
   List<Outlines> outlines = [];
   List<ConnectingLines> connectingLines = [];
+  List<Arc> arcs = [];
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -190,45 +193,9 @@ class FootPrintPainter extends CustomPainter {
         }
       }
     } else {
-      if (component.isNotEmpty) {
-        int points = 50;
-        Paint paint = Paint()
-          ..color = Colors.blue
-          ..style = PaintingStyle.stroke;
-
-        for (var draggableComponent in component) {
-          for (var pad in draggableComponent.component.pad) {
-            Offset position = draggableComponent.position * scale;
-            final double centerX = (pad.x * scale) + (position.dx);
-            final double centerY = (pad.y * scale) + (position.dy);
-            final double radius = pad.drill * scale;
-
-            Path circlePath = Path();
-            circlePath.moveTo(
-                centerX + radius, centerY); // Start path at first circle point
-
-            for (int i = 0; i < points; i++) {
-              double angle = (i * 2 * pi) / points;
-              double x = centerX + radius * cos(angle);
-              double y = centerY + radius * sin(angle);
-
-              circlePath.lineTo(x, y); // Draw the circle
-
-              // Debug: Circle point coordinates
-            }
-
-            circlePath.close();
-            canvas.drawPath(
-                circlePath, paint); // Draw the entire path, including lines
-          }
-        }
-      }
-
       if (lines.isNotEmpty) {
         for (var line in lines) {
           // Looping through all of the lines
-          print("Line #${lines.indexOf(line)}: ${line.startConnected}");
-          print("Line #${lines.indexOf(line)}: ${line.endConnected}");
 
           Offset endLine = line.end * scale;
           Offset startLine = line.start * scale;
@@ -240,6 +207,13 @@ class FootPrintPainter extends CustomPainter {
             Outlines outline = getOutlines(
                 padOffset!, pad!.drill * scale, lineThickness, endLine, false);
 
+            Arc arc = Arc(
+                startPoint: outline.leftStartPoint,
+                endPoint: outline.rightStartPoint,
+                centerPoint: padOffset! * scale,
+                radius: pad.drill * scale);
+
+            arcs.add(arc);
             outlines.add(outline);
           } else if (!line.startConnected && !line.endConnected) {
             Outlines outline =
@@ -252,20 +226,40 @@ class FootPrintPainter extends CustomPainter {
             Outlines outline = getOutlines(
                 padOffset!, pad!.drill * scale, lineThickness, startLine, true);
 
+            Arc arc = Arc(
+                startPoint: outline.rightEndPoint,
+                endPoint: outline.leftEndPoint,
+                centerPoint: padOffset! * scale,
+                radius: pad.drill * scale);
+
             outlines.add(outline);
+            arcs.add(arc);
 
             connectingLines
                 .add(ConnectingLines(connectingLines: List.from(outlines)));
             outlines.clear();
           } else if (line.startConnected && line.endConnected) {
-            print("Both are connected");
             Pad? pad1 = checkForPads(line.start);
             Outlines outline1 = getOutlines(
                 padOffset!, pad1!.drill * scale, lineThickness, endLine, false);
 
+            Arc arc1 = Arc(
+                startPoint: outline1.leftStartPoint,
+                endPoint: outline1.rightStartPoint,
+                centerPoint: padOffset! * scale,
+                radius: pad1.drill * scale);
+            arcs.add(arc1);
+
             Pad? pad2 = checkForPads(line.end);
             Outlines outline2 = getOutlines(padOffset!, pad2!.drill * scale,
                 lineThickness, startLine, true);
+
+            Arc arc2 = Arc(
+                startPoint: outline2.rightEndPoint,
+                endPoint: outline2.leftEndPoint,
+                centerPoint: padOffset! * scale,
+                radius: pad2.drill * scale);
+            arcs.add(arc2);
 
             Outlines finalOutline = Outlines(
                 leftStartPoint: outline1.leftStartPoint,
@@ -356,6 +350,15 @@ class FootPrintPainter extends CustomPainter {
           }
         }
       }
+
+      if (arcs.isNotEmpty) {
+        for (var arc in arcs) {
+          drawArc(arc.startPoint, arc.endPoint, arc.centerPoint, arc.radius,
+              canvas);
+        }
+      }
+
+      passLists(arcs, connectingLines);
     }
   }
 
@@ -484,5 +487,33 @@ class FootPrintPainter extends CustomPainter {
       }
     }
     return null;
+  }
+
+  void drawArc(
+      Offset start, Offset end, Offset center, double radius, Canvas canvas) {
+    final paint = Paint()
+      ..color = Colors.blue
+      ..strokeWidth = 1.0
+      ..style = PaintingStyle.stroke;
+
+    double startAngle = atan2(start.dy - center.dy, start.dx - center.dx);
+    double endAngle = atan2(end.dy - center.dy, end.dx - center.dx);
+
+    if (startAngle < 0) {
+      startAngle += 2 * pi;
+    }
+    if (endAngle < 0) {
+      endAngle += 2 * pi;
+    }
+
+    double sweepAngle = endAngle - startAngle;
+    if (sweepAngle < 0) {
+      sweepAngle += 2 * pi;
+    }
+
+    final rect = Rect.fromCircle(center: center, radius: radius);
+
+    canvas.drawArc(rect, startAngle, sweepAngle, false, paint);
+    canvas.drawCircle(center, radius / 2, paint);
   }
 }

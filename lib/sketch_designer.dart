@@ -1,19 +1,19 @@
 // ignore_for_file: avoid_print
 
 import 'dart:convert';
-import 'dart:ui' as ui;
 
+import 'package:circuit_designer/canvas_to_gcode.dart';
 import 'package:circuit_designer/cnc_controls.dart';
 import 'package:circuit_designer/draggable_footprints.dart';
+import 'package:circuit_designer/footprints_arcs.dart';
 import 'package:circuit_designer/footprints_bounding_box.dart';
 import 'package:circuit_designer/line_traces.dart';
+import 'package:circuit_designer/outline_carve.dart';
 import 'package:circuit_designer/sketch_comp_library.dart';
 import 'package:circuit_designer/sketch_footprint_painter.dart';
 import 'package:circuit_designer/sketch_menubar.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:window_manager/window_manager.dart';
 import 'dart:io';
 
@@ -60,6 +60,9 @@ class _SketchboardState extends State<Sketchboard> {
   List<Line> lines = [];
   FocusNode focusNode = FocusNode();
 
+  List<Arc>? arcs;
+  List<ConnectingLines>? outlines;
+
   final GlobalKey _globalKey = GlobalKey();
 
   @override
@@ -78,40 +81,6 @@ class _SketchboardState extends State<Sketchboard> {
     super.dispose();
   }
 
-  Future<void> _capturePng() async {
-    try {
-      RenderRepaintBoundary boundary = _globalKey.currentContext!
-          .findRenderObject() as RenderRepaintBoundary;
-
-      // Set desired inches and DPI
-      double inches = canvasWidthInInches.toDouble();
-      const double dpi =
-          300; // You can change this to 300 for higher resolution
-      double desiredWidth = inches * dpi; // 192 pixels for 96 DPI
-
-      // Calculate pixel ratio
-      double pixelRatio = desiredWidth / boundary.size.width;
-
-      // Capture the image
-      ui.Image image = await boundary.toImage(pixelRatio: pixelRatio);
-
-      // Convert the image to PNG bytes
-      ByteData? byteData =
-          await image.toByteData(format: ui.ImageByteFormat.png);
-      Uint8List pngBytes = byteData!.buffer.asUint8List();
-
-      // Save the image as before
-      final directory = await getApplicationDocumentsDirectory();
-      final filePath = '${directory.path}/custom_paint_image.png';
-      final file = File(filePath);
-      await file.writeAsBytes(pngBytes);
-
-      //print("File saved to: $filePath");
-    } catch (e) {
-      //print("Error saving PNG: $e");
-    }
-  }
-
   void updateCanvasSize(int height, int width) {
     setState(() {
       canvasHeightInPixels = 25.4 * height.toDouble();
@@ -127,7 +96,11 @@ class _SketchboardState extends State<Sketchboard> {
     });
   }
 
-  void saveFileAsSvg() {}
+  void updateListForGCode(
+      List<Arc> receivedArcs, List<ConnectingLines> receivedOutlines) {
+    arcs = receivedArcs;
+    outlines = receivedOutlines;
+  }
 
   Future<void> loadJsonFiles() async {
     const folderPath = 'lib/data/component_libraries/';
@@ -387,7 +360,8 @@ class _SketchboardState extends State<Sketchboard> {
                                                   displayOutline,
                                                   lines,
                                                   currentPoint,
-                                                  startPoint),
+                                                  startPoint,
+                                                  updateListForGCode),
                                               size: Size(
                                                   canvasWidthInPixels * scale,
                                                   canvasHeightInPixels * scale),
@@ -442,11 +416,16 @@ class _SketchboardState extends State<Sketchboard> {
                               bottom: 20.0,
                               child: ElevatedButton(
                                   onPressed: () {
-                                    _capturePng();
-                                    Navigator.of(context).push(
+                                    setState(() {
+                                      displayOutline = true;
+                                    });
+                                    /*Navigator.of(context).push(
                                         MaterialPageRoute(
                                             builder: (context) =>
-                                                const CncControls()));
+                                                const CncControls()));*/
+
+                                    GCodeConverter().convertCanvasToGCode(
+                                        arcs!, outlines!, scale);
                                   },
                                   style: ElevatedButton.styleFrom(
                                       shape: RoundedRectangleBorder(

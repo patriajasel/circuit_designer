@@ -24,3 +24,10 @@ class Line {
       required this.startConnected,
       required this.endConnected});
 }
+
+class GCodeLines {
+  Offset startOffset;
+  Offset endOffset;
+
+  GCodeLines({required this.startOffset, required this.endOffset});
+}
