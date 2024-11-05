@@ -19,7 +19,7 @@ class GCodeConverter {
   double? cwJ;
   List<Arc> arcsToDrill = [];
 
-  void convertCanvasToGCode(
+  List<String> convertCanvasToGCode(
       List<Arc> arcs, List<ConnectingLines> outlines, double scale) {
     arcsToDrill.addAll(arcs);
 
@@ -106,7 +106,9 @@ class GCodeConverter {
     gCodeCommands.add("M5"); // Stop spindle
     gCodeCommands.add("M30"); // End of program
 
-    saveGcodeFile("TestingGCodeFile", gCodeCommands);
+    saveGcodeFile("GCodeTest", gCodeCommands);
+
+    return gCodeCommands;
   }
 
   void disperseOutLines(ConnectingLines connectingLines) {

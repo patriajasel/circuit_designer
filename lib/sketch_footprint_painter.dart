@@ -29,12 +29,14 @@ class FootPrintPainter extends CustomPainter {
   Offset? previousRightEnd;
 
   Offset? padOffset;
+  Offset? smdOffset;
 
   double lengthChange = 0.1;
 
   List<Outlines> outlines = [];
   List<ConnectingLines> connectingLines = [];
   List<Arc> arcs = [];
+  List<SMDOutline> smds = [];
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -108,7 +110,7 @@ class FootPrintPainter extends CustomPainter {
         // Line paint for the temporary line
         final tempLinePaint = Paint()
           ..color = Colors.black
-          ..strokeWidth = 1.0 * scale
+          ..strokeWidth = 2.0 * scale
           ..style = PaintingStyle.stroke;
 
         Offset scaledStart = startPoint! * scale;
@@ -203,18 +205,49 @@ class FootPrintPainter extends CustomPainter {
 
           if (line.startConnected && !line.endConnected) {
             Pad? pad = checkForPads(line.start);
+            Smd? smd = checkForSMD(line.start);
 
-            Outlines outline = getOutlines(
-                padOffset!, pad!.drill * scale, lineThickness, endLine, false);
+            if (pad != null && smd == null) {
+              Outlines outline = getPadOutlines(
+                  padOffset!, pad.drill * scale, lineThickness, endLine, false);
 
-            Arc arc = Arc(
-                startPoint: outline.leftStartPoint,
-                endPoint: outline.rightStartPoint,
-                centerPoint: padOffset! * scale,
-                radius: pad.drill * scale);
+              Arc arc = Arc(
+                  startPoint: outline.leftStartPoint,
+                  endPoint: outline.rightStartPoint,
+                  centerPoint: padOffset! * scale,
+                  radius: pad.drill * scale);
 
-            arcs.add(arc);
-            outlines.add(outline);
+              arcs.add(arc);
+              outlines.add(outline);
+            } else if (smd != null && pad != null) {
+              // This means that the component is either a square pad or a rectangle pad
+              Outlines? smdLine = getSMDLines(smd, startLine / scale,
+                  endLine / scale, lineThickness, canvas, false);
+
+              outlines.add(smdLine!);
+
+              SMDOutline? smdOutline = getSMDOutline(
+                  smdLine.leftStartPoint, smdLine.rightStartPoint, smd);
+
+              smds.add(smdOutline!);
+
+              Arc smdArc = Arc(
+                  startPoint: Offset.zero,
+                  endPoint: Offset.zero,
+                  centerPoint: Offset(pad.x, pad.y) + smdOffset!,
+                  radius: pad.drill);
+              arcs.add(smdArc);
+            } else if (smd != null && pad == null) {
+              Outlines? smdLine = getSMDLines(smd, startLine / scale,
+                  endLine / scale, lineThickness, canvas, false);
+
+              outlines.add(smdLine!);
+
+              SMDOutline? smdOutline = getSMDOutline(
+                  smdLine.leftStartPoint, smdLine.rightStartPoint, smd);
+
+              smds.add(smdOutline!);
+            }
           } else if (!line.startConnected && !line.endConnected) {
             Outlines outline =
                 getLines(startLine / scale, endLine / scale, lineThickness);
@@ -222,25 +255,49 @@ class FootPrintPainter extends CustomPainter {
             outlines.add(outline);
           } else if (line.endConnected && !line.startConnected) {
             Pad? pad = checkForPads(line.end);
+            Smd? smd = checkForSMD(line.end);
+            if (pad != null && smd == null) {
+              Outlines outline = getPadOutlines(padOffset!, pad.drill * scale,
+                  lineThickness, startLine, true);
 
-            Outlines outline = getOutlines(
-                padOffset!, pad!.drill * scale, lineThickness, startLine, true);
+              Arc arc = Arc(
+                  startPoint: outline.rightEndPoint,
+                  endPoint: outline.leftEndPoint,
+                  centerPoint: padOffset! * scale,
+                  radius: pad.drill * scale);
 
-            Arc arc = Arc(
-                startPoint: outline.rightEndPoint,
-                endPoint: outline.leftEndPoint,
-                centerPoint: padOffset! * scale,
-                radius: pad.drill * scale);
+              outlines.add(outline);
+              arcs.add(arc);
+            } else if (smd != null && pad != null) {
+              Outlines? smdOutline = getSMDLines(smd, endLine / scale,
+                  startLine / scale, lineThickness, canvas, true);
 
-            outlines.add(outline);
-            arcs.add(arc);
+              outlines.add(smdOutline!);
+
+              Arc smdArc = Arc(
+                  startPoint: Offset.zero,
+                  endPoint: Offset.zero,
+                  centerPoint: Offset(pad.x, pad.y) + smdOffset!,
+                  radius: pad.drill);
+              arcs.add(smdArc);
+            } else if (smd != null && pad == null) {
+              Outlines? smdLine = getSMDLines(smd, startLine / scale,
+                  endLine / scale, lineThickness, canvas, true);
+
+              outlines.add(smdLine!);
+
+              SMDOutline? smdOutline = getSMDOutline(
+                  smdLine.leftStartPoint, smdLine.rightStartPoint, smd);
+
+              smds.add(smdOutline!);
+            }
 
             connectingLines
                 .add(ConnectingLines(connectingLines: List.from(outlines)));
             outlines.clear();
           } else if (line.startConnected && line.endConnected) {
             Pad? pad1 = checkForPads(line.start);
-            Outlines outline1 = getOutlines(
+            Outlines outline1 = getPadOutlines(
                 padOffset!, pad1!.drill * scale, lineThickness, endLine, false);
 
             Arc arc1 = Arc(
@@ -251,7 +308,7 @@ class FootPrintPainter extends CustomPainter {
             arcs.add(arc1);
 
             Pad? pad2 = checkForPads(line.end);
-            Outlines outline2 = getOutlines(padOffset!, pad2!.drill * scale,
+            Outlines outline2 = getPadOutlines(padOffset!, pad2!.drill * scale,
                 lineThickness, startLine, true);
 
             Arc arc2 = Arc(
@@ -352,9 +409,23 @@ class FootPrintPainter extends CustomPainter {
       }
 
       if (arcs.isNotEmpty) {
+        final paint = Paint()
+          ..color = Colors.blue
+          ..strokeWidth = 1.0
+          ..style = PaintingStyle.stroke;
         for (var arc in arcs) {
           drawArc(arc.startPoint, arc.endPoint, arc.centerPoint, arc.radius,
               canvas);
+          if (arc.startPoint == Offset.zero && arc.endPoint == Offset.zero) {
+            canvas.drawCircle(
+                arc.centerPoint * scale, (arc.radius * scale) / 2, paint);
+          }
+        }
+      }
+
+      if (smds.isNotEmpty) {
+        for (var smd in smds) {
+          drawSMDs(smd, canvas);
         }
       }
 
@@ -377,8 +448,8 @@ class FootPrintPainter extends CustomPainter {
         padOffset.dy + padRadius * sin(angle));
   }
 
-  Outlines getOutlines(Offset padCenter, double padRadius, double lineThickness,
-      Offset notConnectedPoint, bool isEnd) {
+  Outlines getPadOutlines(Offset padCenter, double padRadius,
+      double lineThickness, Offset notConnectedPoint, bool isEnd) {
     double dx = notConnectedPoint.dx - (padCenter.dx * scale);
     double dy = notConnectedPoint.dy - (padCenter.dy * scale);
     double angle = atan2(dy, dx);
@@ -515,5 +586,219 @@ class FootPrintPainter extends CustomPainter {
 
     canvas.drawArc(rect, startAngle, sweepAngle, false, paint);
     canvas.drawCircle(center, radius / 2, paint);
+  }
+
+  checkForSMD(Offset offset) {
+    for (var comp in component) {
+      for (var smd in comp.component.smd) {
+        smdOffset = Offset(smd.x, smd.y) + comp.position;
+        if (offset == smdOffset) {
+          return smd;
+        }
+      }
+    }
+  }
+
+  double getLineAngle(Offset start, Offset end) {
+    // Calculate the differences in x and y coordinates
+    double dx = end.dx - start.dx;
+    double dy = end.dy - start.dy;
+
+    // Use atan2 to calculate the angle in radians
+    double angleInRadians = atan2(dy, dx);
+
+    // Optionally convert the angle to degrees if needed
+    double angleInDegrees = angleInRadians * (180 / pi);
+
+    return angleInDegrees;
+  }
+
+  Outlines? getSMDLines(Smd smd, Offset connected, Offset notConnected,
+      double lineThickness, Canvas canvas, bool isEnd) {
+    double smdHeight = smd.dx / 2;
+    double smdWidth = smd.dy / 2;
+    Offset smdCenter = Offset(smd.x, smd.y);
+
+    // Corners of the SMD
+    Offset topLeft =
+        Offset(smdCenter.dx - smdWidth, smdCenter.dy - smdHeight) + smdOffset!;
+    Offset topRight =
+        Offset(smdCenter.dx + smdWidth, smdCenter.dy - smdHeight) + smdOffset!;
+    Offset bottomLeft =
+        Offset(smdCenter.dx - smdWidth, smdCenter.dy + smdHeight) + smdOffset!;
+    Offset bottomRight =
+        Offset(smdCenter.dx + smdWidth, smdCenter.dy + smdHeight) + smdOffset!;
+
+    double lineAngle = getLineAngle(connected, notConnected);
+
+    // Helper function to return the outline for the given points
+    Outlines getOutlines(Offset leftStart, Offset leftEnd, Offset rightStart,
+        Offset rightEnd, Offset centerStart, Offset centerEnd) {
+      return isEnd
+          ? Outlines(
+              leftStartPoint: rightEnd,
+              leftEndPoint: rightStart,
+              rightStartPoint: leftEnd,
+              rightEndPoint: leftStart,
+              centerStartPoint: centerStart,
+              centerEndPoint: notConnected,
+            )
+          : Outlines(
+              leftStartPoint: leftStart,
+              leftEndPoint: leftEnd,
+              rightStartPoint: rightStart,
+              rightEndPoint: rightEnd,
+              centerStartPoint: centerStart,
+              centerEndPoint: notConnected,
+            );
+    }
+
+    // Based on the angle, adjust the start and end points
+    switch (lineAngle.toInt()) {
+      case 0:
+        // Horizontal line (angle = 0 degrees)
+        Offset centerLine = Offset(topRight.dx, connected.dy) * scale;
+        Offset leftLineStart =
+            Offset(topRight.dx * scale, (connected.dy * scale) + lineThickness);
+        Offset rightLineStart =
+            Offset(topRight.dx * scale, (connected.dy * scale) - lineThickness);
+        Offset leftLineEnd = Offset(notConnected.dx, leftLineStart.dy);
+        Offset rightLineEnd = Offset(notConnected.dx, rightLineStart.dy);
+
+        return getOutlines(leftLineStart, leftLineEnd, rightLineStart,
+            rightLineEnd, centerLine, notConnected);
+
+      case 90:
+        // Vertical line (angle = 90 degrees)
+        Offset centerLine = Offset(connected.dx, bottomRight.dy) * scale;
+        Offset leftLineStart = Offset(
+            (connected.dx * scale) - lineThickness, bottomRight.dy * scale);
+        Offset rightLineStart = Offset(
+            (connected.dx * scale) + lineThickness, bottomRight.dy * scale);
+        Offset leftLineEnd = Offset(leftLineStart.dx, notConnected.dy * scale);
+        Offset rightLineEnd =
+            Offset(rightLineStart.dx, notConnected.dy * scale);
+
+        return getOutlines(leftLineStart, leftLineEnd, rightLineStart,
+            rightLineEnd, centerLine, notConnected);
+
+      case 180:
+        // Horizontal line (angle = 180 degrees, opposite direction)
+        Offset centerLine = Offset(bottomLeft.dx, connected.dy) * scale;
+        Offset leftLineStart = Offset(
+            bottomLeft.dx * scale, (connected.dy * scale) - lineThickness);
+        Offset rightLineStart = Offset(
+            bottomLeft.dx * scale, (connected.dy * scale) + lineThickness);
+        Offset leftLineEnd = Offset(notConnected.dx * scale, leftLineStart.dy);
+        Offset rightLineEnd =
+            Offset(notConnected.dx * scale, rightLineStart.dy);
+
+        return getOutlines(leftLineStart, leftLineEnd, rightLineStart,
+            rightLineEnd, centerLine, notConnected);
+
+      case -90:
+        // Vertical line (angle = -90 degrees, opposite direction)
+        Offset centerLine = Offset(connected.dx, topLeft.dy) * scale;
+        Offset leftLineStart =
+            Offset((connected.dx * scale) + lineThickness, topLeft.dy * scale);
+        Offset rightLineStart =
+            Offset((connected.dx * scale) - lineThickness, topLeft.dy * scale);
+        Offset leftLineEnd = Offset(leftLineStart.dx, notConnected.dy * scale);
+        Offset rightLineEnd =
+            Offset(rightLineStart.dx, notConnected.dy * scale);
+
+        return getOutlines(leftLineStart, leftLineEnd, rightLineStart,
+            rightLineEnd, centerLine, notConnected);
+
+      default:
+        return null; // Handle any unsupported angles
+    }
+  }
+
+  SMDOutline? getSMDOutline(Offset leftStart, Offset rightStart, Smd smd) {
+    double smdHeight = smd.dx / 2;
+    double smdWidth = smd.dy / 2;
+    Offset smdCenter = Offset(smd.x, smd.y);
+
+    // Corners of the SMD
+    Offset topLeft =
+        Offset(smdCenter.dx - smdWidth, smdCenter.dy - smdHeight) + smdOffset!;
+    Offset topRight =
+        Offset(smdCenter.dx + smdWidth, smdCenter.dy - smdHeight) + smdOffset!;
+    Offset bottomLeft =
+        Offset(smdCenter.dx - smdWidth, smdCenter.dy + smdHeight) + smdOffset!;
+    Offset bottomRight =
+        Offset(smdCenter.dx + smdWidth, smdCenter.dy + smdHeight) + smdOffset!;
+
+    return SMDOutline(
+        topLeft: topLeft,
+        topRight: topRight,
+        bottomLeft: bottomLeft,
+        bottomRight: bottomRight,
+        connectedLeftLine: leftStart,
+        connectedRightLine: rightStart);
+  }
+
+  void drawSMDs(SMDOutline smdOutline, Canvas canvas) {
+    final linePaint = Paint()
+      ..color = Colors.blue
+      ..strokeWidth = 1.0
+      ..style = PaintingStyle.stroke;
+    if (smdOutline.connectedLeftLine.dx / scale == smdOutline.bottomRight.dx &&
+        smdOutline.connectedRightLine.dx / scale == smdOutline.topRight.dx) {
+      //drawing the outline
+      canvas.drawLine(smdOutline.connectedLeftLine,
+          smdOutline.bottomRight * scale, linePaint);
+      canvas.drawLine(smdOutline.bottomRight * scale,
+          smdOutline.bottomLeft * scale, linePaint);
+      canvas.drawLine(
+          smdOutline.bottomLeft * scale, smdOutline.topLeft * scale, linePaint);
+      canvas.drawLine(
+          smdOutline.topLeft * scale, smdOutline.topRight * scale, linePaint);
+      canvas.drawLine(smdOutline.topRight * scale,
+          smdOutline.connectedRightLine, linePaint);
+    } else if (smdOutline.connectedLeftLine.dx / scale ==
+            smdOutline.topLeft.dx &&
+        smdOutline.connectedRightLine.dx / scale == smdOutline.bottomLeft.dx) {
+      // drawing the outline
+      canvas.drawLine(
+          smdOutline.connectedLeftLine, smdOutline.topLeft * scale, linePaint);
+      canvas.drawLine(
+          smdOutline.topLeft * scale, smdOutline.topRight * scale, linePaint);
+      canvas.drawLine(smdOutline.topRight * scale,
+          smdOutline.bottomRight * scale, linePaint);
+      canvas.drawLine(smdOutline.bottomRight * scale,
+          smdOutline.bottomLeft * scale, linePaint);
+      canvas.drawLine(smdOutline.bottomLeft * scale,
+          smdOutline.connectedRightLine, linePaint);
+    } else if (smdOutline.connectedLeftLine.dy / scale ==
+            smdOutline.bottomLeft.dy &&
+        smdOutline.connectedRightLine.dy / scale == smdOutline.bottomRight.dy) {
+      // drawing the outline
+      canvas.drawLine(smdOutline.connectedLeftLine,
+          smdOutline.bottomLeft * scale, linePaint);
+      canvas.drawLine(
+          smdOutline.bottomLeft * scale, smdOutline.topLeft * scale, linePaint);
+      canvas.drawLine(
+          smdOutline.topLeft * scale, smdOutline.topRight * scale, linePaint);
+      canvas.drawLine(smdOutline.topRight * scale,
+          smdOutline.bottomRight * scale, linePaint);
+      canvas.drawLine(smdOutline.bottomRight * scale,
+          smdOutline.connectedRightLine, linePaint);
+    } else if (smdOutline.connectedLeftLine.dy / scale ==
+            smdOutline.topRight.dy &&
+        smdOutline.connectedRightLine.dy / scale == smdOutline.topLeft.dy) {
+      // drawing the outline
+      canvas.drawLine(
+          smdOutline.connectedLeftLine, smdOutline.topRight * scale, linePaint);
+      canvas.drawLine(smdOutline.topRight * scale,
+          smdOutline.bottomRight * scale, linePaint);
+      canvas.drawLine(smdOutline.bottomRight * scale,
+          smdOutline.bottomLeft * scale, linePaint);
+      canvas.drawLine(
+          smdOutline.bottomLeft * scale, smdOutline.topLeft * scale, linePaint);
+      canvas.drawLine(
+          smdOutline.topLeft * scale, smdOutline.connectedRightLine, linePaint);
+    }
   }
 }

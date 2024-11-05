@@ -419,13 +419,14 @@ class _SketchboardState extends State<Sketchboard> {
                                     setState(() {
                                       displayOutline = true;
                                     });
-                                    /*Navigator.of(context).push(
-                                        MaterialPageRoute(
-                                            builder: (context) =>
-                                                const CncControls()));*/
-
-                                    GCodeConverter().convertCanvasToGCode(
-                                        arcs!, outlines!, scale);
+                                    List<String> gCodes = GCodeConverter()
+                                        .convertCanvasToGCode(
+                                            arcs!, outlines!, scale);
+                                    Navigator.of(context)
+                                        .push(MaterialPageRoute(
+                                            builder: (context) => CncControls(
+                                                  gCodeCommands: gCodes,
+                                                )));
                                   },
                                   style: ElevatedButton.styleFrom(
                                       shape: RoundedRectangleBorder(
@@ -722,7 +723,7 @@ class _SketchboardState extends State<Sketchboard> {
               end: endPoint!,
               isSelected: false,
               isHovered: false,
-              thickness: 1.0,
+              thickness: 2.0,
               startConnected: startConnected,
               endConnected: endConnected);
 

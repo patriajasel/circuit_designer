@@ -22,3 +22,20 @@ class Outlines {
       required this.centerStartPoint,
       required this.centerEndPoint});
 }
+
+class SMDOutline {
+  Offset topLeft;
+  Offset topRight;
+  Offset bottomLeft;
+  Offset bottomRight;
+  Offset connectedLeftLine;
+  Offset connectedRightLine;
+
+  SMDOutline(
+      {required this.topLeft,
+      required this.topRight,
+      required this.bottomLeft,
+      required this.bottomRight,
+      required this.connectedLeftLine,
+      required this.connectedRightLine});
+}

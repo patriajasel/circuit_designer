@@ -9,7 +9,8 @@ import 'package:flutter_libserialport/flutter_libserialport.dart';
 import 'package:window_manager/window_manager.dart';
 
 class CncControls extends StatefulWidget {
-  const CncControls({super.key});
+  final List<String> gCodeCommands;
+  const CncControls({super.key, required this.gCodeCommands});
 
   @override
   State<CncControls> createState() => _CncControlsState();
@@ -642,6 +643,46 @@ class _CncControlsState extends State<CncControls> {
                                     )),
                               ),
                             ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              )),
+            ],
+          ),
+
+          Column(
+            children: [
+              Expanded(
+                  child: SizedBox(
+                width: 700,
+                child: Card(
+                  elevation: 10.0,
+                  shape: const RoundedRectangleBorder(),
+                  child: Column(
+                    children: [
+                      const Text(
+                        "File Viewer",
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 20),
+                      ),
+                      Expanded(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 10.0, horizontal: 20),
+                          child: Card(
+                            child: Container(
+                                color: Colors.white,
+                                child: ListView.builder(
+                                    itemCount: widget.gCodeCommands.length,
+                                    reverse: true,
+                                    itemBuilder: (context, index) {
+                                      return ListTile(
+                                          title: Text(
+                                              widget.gCodeCommands[index]));
+                                    })),
                           ),
                         ),
                       ),
