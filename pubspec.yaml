@@ -88,6 +88,10 @@ flutter:
      - family: Arvo
        fonts:
          - asset: lib\assets\fonts\Arvo-Bold.ttf
+
+     - family: Righteous
+       fonts:
+         - asset: lib\assets\fonts\Righteous-Regular.ttf
   
   #
   # For details regarding fonts from package dependencies,

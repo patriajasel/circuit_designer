@@ -9,8 +9,8 @@ import 'package:flutter_libserialport/flutter_libserialport.dart';
 import 'package:window_manager/window_manager.dart';
 
 class CncControls extends StatefulWidget {
-  final List<String> gCodeCommands;
-  const CncControls({super.key, required this.gCodeCommands});
+  final List<String>? gCodeCommands;
+  const CncControls({super.key, this.gCodeCommands});
 
   @override
   State<CncControls> createState() => _CncControlsState();
@@ -31,6 +31,10 @@ class _CncControlsState extends State<CncControls> {
   TextEditingController gCodeController = TextEditingController();
   TextEditingController textFieldController = TextEditingController();
 
+  TextEditingController stepSizeX = TextEditingController(text: "1");
+  TextEditingController stepSizeY = TextEditingController(text: "1");
+  TextEditingController stepSizeZ = TextEditingController(text: "1");
+
   List<String> textsToDisplay = [];
 
   bool isSpindleOn = false;
@@ -45,66 +49,83 @@ class _CncControlsState extends State<CncControls> {
   String grblResponse = '';
   StringBuffer responseBuffer = StringBuffer();
 
+  // Method to list available ports
   void _listAvailablePorts() {
-    try {
-      availablePorts = SerialPort.availablePorts;
-      setState(() {});
-      print('Available ports: $availablePorts');
-    } catch (e) {
-      print('Failed to list ports: $e');
+    availablePorts = SerialPort.availablePorts;
+
+    if (availablePorts.isNotEmpty) {
+      print("Available Ports: ");
+      for (var port in availablePorts) {
+        print(port);
+      }
+    } else {
+      print("No serial ports available");
     }
   }
 
   StreamSubscription<Uint8List>? _subscription;
 
-  void _connectToPort(String portName) {
+  // Method to connect to the selected port
+  // Connect to the serial port
+  void _connectToPort(String portName) async {
     try {
-      selectedPort = SerialPort(portName);
+      // Close the port if it is already open
+      if (selectedPort != null && selectedPort!.isOpen) {
+        _disconnectPort();
+      }
 
-      // Configure the serial port
-      selectedPort!.config.baudRate = 115200; // Example baud rate
+      selectedPort = SerialPort(portName);
+      selectedPort!.config.baudRate = 115200;
       selectedPort!.config.bits = 8;
       selectedPort!.config.parity = SerialPortParity.none;
       selectedPort!.config.stopBits = 1;
 
+      // Open the port for reading and writing
       if (selectedPort!.openReadWrite()) {
-        print('Connected to $portName');
+        print('Successfully connected to $portName');
 
-        // Ensure only one listener is attached
-        if (_subscription == null) {
-          reader = SerialPortReader(selectedPort!);
+        // Flush any residual data
+        selectedPort!.flush();
 
-          _subscription = reader!.stream.listen((data) {
-            final response = String.fromCharCodes(data);
+        await Future.delayed(Duration(milliseconds: 10000));
 
-            // Append the new data to the buffer
-            responseBuffer.write(response);
+        // Set up a listener to read the response
+        reader = SerialPortReader(selectedPort!);
 
-            // Check if the response contains a newline character, which signifies the end of the response
-            if (response.contains('\n')) {
-              setState(() {
-                grblResponse = responseBuffer.toString().trim();
-                textsToDisplay.insert(
-                    0, grblResponse); // Store the response in the list
-                responseBuffer
-                    .clear(); // Clear the buffer for the next response
-              });
+        _subscription = reader!.stream.listen((data) {
+          print('Raw data received: $data'); // Debugging log for raw data
+          final response = String.fromCharCodes(data);
+          print(
+              'Converted response: $response'); // Debugging log for converted data
 
-              // Print the response to the debug console
-              print('GRBL Response: $grblResponse');
-            }
-          });
-        } else {
-          print('Stream already being listened to.');
-        }
+          // Append new data to the buffer
+          responseBuffer.write(response);
+
+          // If a complete response is received (contains '\n')
+          if (responseBuffer.toString().contains('\n')) {
+            setState(() {
+              grblResponse = responseBuffer.toString().trim();
+              textsToDisplay.insert(0, "-> $grblResponse");
+              responseBuffer.clear();
+            });
+
+            // Print the response to the console
+            print('GRBL Response: $grblResponse');
+          }
+        }, onError: (error) {
+          print("Error reading from serial port: $error");
+        }, onDone: () {
+          print("Stream is done.");
+        });
       } else {
-        print('Failed to open port');
+        print('Failed to open port $portName');
       }
     } catch (e) {
       print('Exception occurred while connecting: $e');
     }
   }
 
+  // Method to send GCode to GRBL
   void _sendGCode(String command) {
     if (selectedPort != null && selectedPort!.isOpen) {
       try {
@@ -119,12 +140,17 @@ class _CncControlsState extends State<CncControls> {
     }
   }
 
+  // Method to disconnect from the serial port
   void _disconnectPort() {
     if (selectedPort != null && selectedPort!.isOpen) {
       try {
+        _subscription?.cancel(); // Make sure the stream is properly canceled
         selectedPort!.close();
         setState(() {
+          textsToDisplay.insert(0, "Connection has been closed");
           selectedPort = null;
+          reader = null;
+          _subscription = null;
           grblResponse = '';
         });
         print('Disconnected from port');
@@ -134,7 +160,7 @@ class _CncControlsState extends State<CncControls> {
     }
   }
 
-  // Method to listen for GRBL response
+  // Method to listen for GRBL response (if needed)
   Future<String> _waitForGRBLResponse() async {
     Completer<String> completer = Completer();
 
@@ -149,7 +175,7 @@ class _CncControlsState extends State<CncControls> {
         if (response.contains('\n')) {
           setState(() {
             grblResponse = responseBuffer.toString().trim();
-            textsToDisplay.insert(0, grblResponse);
+            textsToDisplay.insert(0, "-> $grblResponse");
             responseBuffer.clear(); // Clear the buffer for the next response
           });
 
@@ -241,7 +267,12 @@ class _CncControlsState extends State<CncControls> {
                                   }
                                 },
                                 child: Text(
-                                    isConnected ? "Disconnect" : "Connect"))
+                                    isConnected ? "Disconnect" : "Connect")),
+                            ElevatedButton(
+                                onPressed: () {
+                                  _listAvailablePorts();
+                                },
+                                child: const Text("Refresh"))
                           ],
                         ), // Space between label and dropdown
                         Padding(
@@ -258,9 +289,7 @@ class _CncControlsState extends State<CncControls> {
                                       .grey.shade400), // Border around dropdown
                             ),
                             child: DropdownButton<String>(
-                              value: availablePorts.isNotEmpty
-                                  ? availablePorts.first
-                                  : null, // Default selected port
+                              value: portName,
                               hint: const Text("Select a Port"),
                               icon: const Icon(
                                   Icons.arrow_drop_down), // Add a dropdown icon
@@ -272,6 +301,7 @@ class _CncControlsState extends State<CncControls> {
                                 if (newValue != null) {
                                   setState(() {
                                     portName = newValue;
+                                    print(newValue);
                                   });
                                 }
                               },
@@ -415,13 +445,166 @@ class _CncControlsState extends State<CncControls> {
                         borderRadius: BorderRadius.zero),
                     child: Column(
                       children: [
-                        const Padding(
-                          padding: EdgeInsets.all(5.0),
-                          child: Text(
-                            "Manual Controls",
-                            style: TextStyle(
-                                fontWeight: FontWeight.bold, fontSize: 20),
-                          ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            const SizedBox(
+                              width: 20,
+                            ),
+                            const Padding(
+                              padding: EdgeInsets.all(5.0),
+                              child: Text(
+                                "Manual Controls",
+                                style: TextStyle(
+                                    fontWeight: FontWeight.bold, fontSize: 20),
+                              ),
+                            ),
+                            Padding(
+                              padding:
+                                  const EdgeInsets.only(top: 10.0, left: 10),
+                              child: IconButton(
+                                  onPressed: () {
+                                    showDialog(
+                                        context: context,
+                                        builder: (builder) {
+                                          return Dialog(
+                                            shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(5)),
+                                            child: Container(
+                                              height: 350,
+                                              width: 400,
+                                              decoration: BoxDecoration(
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          5.0)),
+                                              child: Column(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.start,
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.center,
+                                                children: [
+                                                  const Padding(
+                                                    padding:
+                                                        EdgeInsets.all(20.0),
+                                                    child: Text(
+                                                      "Step Sizes",
+                                                      style: TextStyle(
+                                                          fontSize: 18,
+                                                          fontWeight:
+                                                              FontWeight.bold),
+                                                    ),
+                                                  ),
+                                                  Padding(
+                                                    padding: const EdgeInsets
+                                                        .symmetric(
+                                                        horizontal: 20.0,
+                                                        vertical: 10),
+                                                    child: TextField(
+                                                      inputFormatters: [
+                                                        FilteringTextInputFormatter
+                                                            .digitsOnly
+                                                      ],
+                                                      controller: stepSizeX,
+                                                      decoration:
+                                                          const InputDecoration(
+                                                        labelText:
+                                                            'Step Size for X Axis (mm)',
+                                                        border:
+                                                            OutlineInputBorder(),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  Padding(
+                                                    padding: const EdgeInsets
+                                                        .symmetric(
+                                                        horizontal: 20.0,
+                                                        vertical: 10),
+                                                    child: TextField(
+                                                      inputFormatters: [
+                                                        FilteringTextInputFormatter
+                                                            .digitsOnly
+                                                      ],
+                                                      controller: stepSizeY,
+                                                      decoration:
+                                                          const InputDecoration(
+                                                        labelText:
+                                                            'Step Size for Y Axis (mm)',
+                                                        border:
+                                                            OutlineInputBorder(),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  Padding(
+                                                    padding: const EdgeInsets
+                                                        .symmetric(
+                                                        horizontal: 20.0,
+                                                        vertical: 10),
+                                                    child: TextField(
+                                                      inputFormatters: [
+                                                        FilteringTextInputFormatter
+                                                            .digitsOnly
+                                                      ],
+                                                      controller: stepSizeZ,
+                                                      decoration:
+                                                          const InputDecoration(
+                                                        labelText:
+                                                            'Step Size for Z Axis (mm)',
+                                                        border:
+                                                            OutlineInputBorder(),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  Padding(
+                                                    padding:
+                                                        const EdgeInsets.all(
+                                                            20.0),
+                                                    child: Row(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .spaceAround,
+                                                      children: [
+                                                        ElevatedButton(
+                                                            onPressed: () {
+                                                              setState(() {
+                                                                textsToDisplay
+                                                                    .insert(0,
+                                                                        "-> Step sizes Updated:");
+
+                                                                textsToDisplay
+                                                                    .insert(0,
+                                                                        "-> X: ${stepSizeX.text} mm");
+                                                                textsToDisplay
+                                                                    .insert(0,
+                                                                        "-> Y: ${stepSizeY.text} mm");
+                                                                textsToDisplay
+                                                                    .insert(0,
+                                                                        "-> Z: ${stepSizeZ.text} mm");
+                                                              });
+                                                              Navigator.pop(
+                                                                  context);
+                                                            },
+                                                            child: const Text(
+                                                                "Update")),
+                                                        ElevatedButton(
+                                                            onPressed: () {
+                                                              Navigator.pop(
+                                                                  context);
+                                                            },
+                                                            child: const Text(
+                                                                "Cancel"))
+                                                      ],
+                                                    ),
+                                                  )
+                                                ],
+                                              ),
+                                            ),
+                                          );
+                                        });
+                                  },
+                                  icon: const Icon(Icons.settings)),
+                            )
+                          ],
                         ),
                         const Padding(
                           padding: EdgeInsets.all(3.0),
@@ -441,6 +624,13 @@ class _CncControlsState extends State<CncControls> {
                                   onChanged: (value) {
                                     setState(() {
                                       isSpindleOn = value;
+                                      if (value == true) {
+                                        textsToDisplay.insert(0, "M3");
+                                        _sendGCode("M3");
+                                      } else {
+                                        textsToDisplay.insert(0, "M5");
+                                        _sendGCode("M5");
+                                      }
                                     });
                                   }),
                             ],
@@ -455,7 +645,18 @@ class _CncControlsState extends State<CncControls> {
                                 margin: const EdgeInsets.all(5),
                                 padding: const EdgeInsets.all(10),
                                 child: ElevatedButton(
-                                    onPressed: () {},
+                                    onPressed: () {
+                                      if (feedRateController.text.isEmpty) {
+                                        textsToDisplay.insert(0,
+                                            "Error: Feed Rate not specified");
+                                      } else {
+                                        _sendGCode(
+                                            "G1 X0 Y${stepSizeY.text} F${feedRateController.text}");
+                                        textsToDisplay.insert(0,
+                                            "-> G1 X0 Y${stepSizeY.text} F${feedRateController.text}");
+                                      }
+                                      setState(() {});
+                                    },
                                     style: ElevatedButton.styleFrom(
                                         shape: const RoundedRectangleBorder(
                                             side: BorderSide(width: 2),
@@ -476,7 +677,18 @@ class _CncControlsState extends State<CncControls> {
                                 margin: const EdgeInsets.all(5),
                                 padding: const EdgeInsets.all(10),
                                 child: ElevatedButton(
-                                    onPressed: () {},
+                                    onPressed: () {
+                                      if (feedRateController.text.isEmpty) {
+                                        textsToDisplay.insert(0,
+                                            "Error: Feed Rate not specified");
+                                      } else {
+                                        _sendGCode(
+                                            "G0 Z${stepSizeZ.text} F${feedRateController.text}");
+                                        textsToDisplay.insert(0,
+                                            "-> G0 Z${stepSizeZ.text} F${feedRateController.text}");
+                                      }
+                                      setState(() {});
+                                    },
                                     style: ElevatedButton.styleFrom(
                                         shape: const RoundedRectangleBorder(
                                             side: BorderSide(width: 2),
@@ -496,7 +708,18 @@ class _CncControlsState extends State<CncControls> {
                                 margin: const EdgeInsets.all(5),
                                 padding: const EdgeInsets.all(10),
                                 child: ElevatedButton(
-                                    onPressed: () {},
+                                    onPressed: () {
+                                      if (feedRateController.text.isEmpty) {
+                                        textsToDisplay.insert(0,
+                                            "Error: Feed Rate not specified");
+                                      } else {
+                                        _sendGCode(
+                                            "G1 X-${stepSizeX.text} Y0 F${feedRateController.text}");
+                                        textsToDisplay.insert(0,
+                                            "-> G1 X-${stepSizeX.text} Y0 F${feedRateController.text}");
+                                      }
+                                      setState(() {});
+                                    },
                                     style: ElevatedButton.styleFrom(
                                         shape: const RoundedRectangleBorder(
                                             side: BorderSide(width: 2),
@@ -517,7 +740,18 @@ class _CncControlsState extends State<CncControls> {
                                 margin: const EdgeInsets.all(5),
                                 padding: const EdgeInsets.all(10),
                                 child: ElevatedButton(
-                                    onPressed: () {},
+                                    onPressed: () {
+                                      if (feedRateController.text.isEmpty) {
+                                        textsToDisplay.insert(
+                                            0, "Error: Feed Rate no specified");
+                                      } else {
+                                        _sendGCode(
+                                            "G1 X${stepSizeX.text} Y0 F${feedRateController.text}");
+                                        textsToDisplay.insert(0,
+                                            "-> G1 X${stepSizeX.text} Y0 F${feedRateController.text}");
+                                      }
+                                      setState(() {});
+                                    },
                                     style: ElevatedButton.styleFrom(
                                         shape: const RoundedRectangleBorder(
                                             side: BorderSide(width: 2),
@@ -539,7 +773,18 @@ class _CncControlsState extends State<CncControls> {
                                 margin: const EdgeInsets.all(5),
                                 padding: const EdgeInsets.all(10),
                                 child: ElevatedButton(
-                                    onPressed: () {},
+                                    onPressed: () {
+                                      if (feedRateController.text.isEmpty) {
+                                        textsToDisplay.insert(
+                                            0, "Error: Feed Rate no specified");
+                                      } else {
+                                        _sendGCode(
+                                            "G1 X0 Y-${stepSizeY.text} F${feedRateController.text}");
+                                        textsToDisplay.insert(0,
+                                            "-> G1 X0 Y-${stepSizeY.text} F${feedRateController.text}");
+                                      }
+                                      setState(() {});
+                                    },
                                     style: ElevatedButton.styleFrom(
                                         shape: const RoundedRectangleBorder(
                                             side: BorderSide(width: 2),
@@ -560,7 +805,18 @@ class _CncControlsState extends State<CncControls> {
                                 margin: const EdgeInsets.all(5),
                                 padding: const EdgeInsets.all(10),
                                 child: ElevatedButton(
-                                    onPressed: () {},
+                                    onPressed: () {
+                                      if (feedRateController.text.isEmpty) {
+                                        textsToDisplay.insert(
+                                            0, "Error: Feed Rate no specified");
+                                      } else {
+                                        _sendGCode(
+                                            "G0 Z-${stepSizeZ.text} F${feedRateController.text}");
+                                        textsToDisplay.insert(0,
+                                            "-> G0 Z-${stepSizeZ.text} F${feedRateController.text}");
+                                      }
+                                      setState(() {});
+                                    },
                                     style: ElevatedButton.styleFrom(
                                         shape: const RoundedRectangleBorder(
                                             side: BorderSide(width: 2),
@@ -590,7 +846,7 @@ class _CncControlsState extends State<CncControls> {
             children: [
               Expanded(
                   child: SizedBox(
-                width: 700,
+                width: 600,
                 child: Card(
                   elevation: 10.0,
                   shape: const RoundedRectangleBorder(),
@@ -600,6 +856,23 @@ class _CncControlsState extends State<CncControls> {
                         "Console",
                         style: TextStyle(
                             fontWeight: FontWeight.bold, fontSize: 20),
+                      ),
+                      Expanded(
+                        flex: 3,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 10.0, horizontal: 20),
+                          child: Card(
+                            child: Container(
+                                color: Colors.white,
+                                child: ListView.builder(
+                                    itemCount: 0,
+                                    reverse: true,
+                                    itemBuilder: (context, index) {
+                                      return ListTile(title: Text("NONE"));
+                                    })),
+                          ),
+                        ),
                       ),
                       Expanded(
                         child: Container(
@@ -613,6 +886,8 @@ class _CncControlsState extends State<CncControls> {
                                     reverse: true,
                                     itemBuilder: (context, index) {
                                       return ListTile(
+                                          minVerticalPadding: 2,
+                                          minTileHeight: 20,
                                           title: Text(textsToDisplay[index]));
                                     })),
                           ),
@@ -652,46 +927,6 @@ class _CncControlsState extends State<CncControls> {
               )),
             ],
           ),
-
-          Column(
-            children: [
-              Expanded(
-                  child: SizedBox(
-                width: 700,
-                child: Card(
-                  elevation: 10.0,
-                  shape: const RoundedRectangleBorder(),
-                  child: Column(
-                    children: [
-                      const Text(
-                        "File Viewer",
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 20),
-                      ),
-                      Expanded(
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 10.0, horizontal: 20),
-                          child: Card(
-                            child: Container(
-                                color: Colors.white,
-                                child: ListView.builder(
-                                    itemCount: widget.gCodeCommands.length,
-                                    reverse: true,
-                                    itemBuilder: (context, index) {
-                                      return ListTile(
-                                          title: Text(
-                                              widget.gCodeCommands[index]));
-                                    })),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              )),
-            ],
-          )
         ],
       ),
     );

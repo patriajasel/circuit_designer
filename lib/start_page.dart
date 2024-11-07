@@ -11,6 +11,7 @@ class _StartPageState extends State<StartPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.black,
       body: Row(
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
@@ -19,40 +20,63 @@ class _StartPageState extends State<StartPage> {
             children: [
               Expanded(
                 child: Container(
-                  width: 250,
-                  color: const Color(0xFF454545),
+                  width: 300,
+                  margin: const EdgeInsets.all(20.0),
+                  decoration: BoxDecoration(
+                      color: Colors.grey.shade900,
+                      borderRadius: BorderRadius.circular(10.0)),
                   child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.start,
                     children: [
-                      Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 15.0),
-                        child: const Text(
-                          "Start Here",
-                          style: TextStyle(
-                              fontSize: 18.0,
-                              fontFamily: "Arvo",
-                              color: Colors.white),
+                      Padding(
+                        padding: const EdgeInsets.all(10.0),
+                        child: Row(
+                          children: [
+                            Image.asset(
+                              "lib/assets/logo/logo.png",
+                              scale: 7,
+                            ),
+                            const Padding(
+                              padding: EdgeInsets.only(left: 10),
+                              child: Text(
+                                "CREATIVE CIRCUITS",
+                                style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                    fontFamily: "Righteous"),
+                              ),
+                            )
+                          ],
                         ),
                       ),
-                      const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 15.0),
-                        child: Divider(
-                          thickness: 2,
+                      Container(
+                        margin: const EdgeInsets.only(top: 40),
+                        child: Column(
+                          children: [
+                            _sideMenuOptions("Create PCB Design",
+                                Icons.polyline_rounded, "/Sketch"),
+                            _sideMenuOptions("Open Existing Design",
+                                Icons.folder_open, "/Sketch"),
+                            _sideMenuOptions("CNC Controls",
+                                Icons.settings_remote_rounded, "/Controls"),
+                          ],
                         ),
                       ),
 
+                      Expanded(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            _sideMenuOptions("User Manual",
+                                Icons.menu_book_rounded, "/Sketch"),
+                            _sideMenuOptions("About Us",
+                                Icons.info_outline_rounded, "/Sketch")
+                          ],
+                        ),
+                      )
+
                       // * This is the section for Side navigation Buttons
-                      _sideMenuOptions(
-                          "Create Design", Icons.polyline_rounded, "/Sketch"),
-                      _sideMenuOptions("Import Design",
-                          Icons.cloud_upload_rounded, "/Sketch"),
-                      _sideMenuOptions("CNC Controls",
-                          Icons.settings_remote_rounded, "/Sketch"),
-                      _sideMenuOptions(
-                          "User Manual", Icons.menu_book_rounded, "/Sketch"),
-                      _sideMenuOptions(
-                          "About Us", Icons.info_outline_rounded, "/Sketch")
                     ],
                   ),
                 ),
@@ -63,8 +87,11 @@ class _StartPageState extends State<StartPage> {
           //  This is the main section
           Expanded(
             child: Container(
-              color: const Color(0xFF333333),
-              child: Column(
+              margin: const EdgeInsets.all(20.0),
+              decoration: BoxDecoration(
+                  color: Colors.grey.shade900,
+                  borderRadius: BorderRadius.circular(10.0)),
+              child: const Column(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
                   Expanded(
@@ -73,33 +100,23 @@ class _StartPageState extends State<StartPage> {
                       children: [
                         Row(
                           children: [
-                            const Padding(
-                              padding: EdgeInsets.all(15.0),
+                            Padding(
+                              padding: EdgeInsets.only(
+                                  top: 30.0, left: 20.0, bottom: 10.0),
                               child: Text(
-                                "Recent Projects",
+                                "RECENT PROJECTS",
                                 style: TextStyle(
-                                    fontSize: 16.0,
-                                    fontFamily: "Arvo",
+                                    fontSize: 20.0,
+                                    fontFamily: "Righteous",
                                     color: Colors.white),
-                              ),
-                            ),
-                            Expanded(
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.end,
-                                children: [
-                                  // This is the section for Searching, Sorting and Deleting recent projects
-                                  _sideIconButtons(Icons.search),
-                                  _sideIconButtons(Icons.grid_on),
-                                  _sideIconButtons(Icons.delete)
-                                ],
                               ),
                             ),
                           ],
                         ),
-                        const Padding(
+                        Padding(
                           padding: EdgeInsets.symmetric(horizontal: 15.0),
                           child: Divider(
-                            thickness: 2,
+                            thickness: 4,
                           ),
                         ),
                       ],
@@ -115,39 +132,46 @@ class _StartPageState extends State<StartPage> {
   }
 
   //  This is the method for generating Text Navigation buttons.
-  Container _sideMenuOptions(
+  MouseRegion _sideMenuOptions(
       String optionsName, IconData icon, String routeName) {
-    return Container(
-      margin: const EdgeInsets.all(15),
-      width: double.infinity,
-      padding: const EdgeInsets.all(5),
-      decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(5),
-          color: const Color(0xFF5B5B5B)),
-      child: TextButton(
-        onPressed: () {
-          // ! Button action here!
-          _navigator(routeName);
+    final hoverNotifier = ValueNotifier<bool>(false);
+
+    return MouseRegion(
+      onEnter: (_) => hoverNotifier.value = true,
+      onExit: (_) => hoverNotifier.value = false,
+      child: ValueListenableBuilder<bool>(
+        valueListenable: hoverNotifier,
+        builder: (context, hover, child) {
+          return Container(
+            margin: const EdgeInsets.all(10),
+            width: double.infinity,
+            padding: const EdgeInsets.all(5),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(5),
+              color:
+                  hover ? Colors.lightGreenAccent.shade700 : Colors.transparent,
+            ),
+            child: TextButton(
+              onPressed: () {
+                _navigator(routeName);
+              },
+              child: Row(
+                children: [
+                  Icon(
+                    icon,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    optionsName,
+                    style: const TextStyle(fontSize: 14.0, color: Colors.white),
+                  ),
+                ],
+              ),
+            ),
+          );
         },
-        style: TextButton.styleFrom(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              icon,
-              color: Colors.white,
-              size: 20,
-            ),
-            const SizedBox(width: 10),
-            Text(
-              optionsName,
-              style: const TextStyle(
-                  fontSize: 14.0, fontFamily: "Arvo", color: Colors.white),
-            ),
-          ],
-        ),
       ),
     );
   }

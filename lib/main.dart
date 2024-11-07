@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:circuit_designer/cnc_controls.dart';
 import 'package:circuit_designer/sketch_designer.dart';
 import 'package:circuit_designer/start_page.dart';
 import 'package:flutter/material.dart';
@@ -11,9 +12,9 @@ void main() async {
   // Setting the minimum and maximum size for the window
   await windowManager.ensureInitialized();
   if (Platform.isWindows) {
-    WindowManager.instance.setMinimumSize(const Size(800, 600));
+    WindowManager.instance.setMinimumSize(const Size(1280, 720));
     WindowManager.instance.setMaximumSize(const Size(1920, 1080));
-    WindowManager.instance.setTitle("Circuit Designer");
+    WindowManager.instance.setTitle("Creative Circuits");
     WindowManager.instance.setMaximizable(false);
     WindowManager.instance.setResizable(false);
     WindowManager.instance.center();
@@ -35,6 +36,7 @@ class MyApp extends StatelessWidget {
       // Navigation Names
       routes: {
         '/Sketch': (context) => const Sketchboard(),
+        '/Controls': (context) => const CncControls()
       },
     );
   }
