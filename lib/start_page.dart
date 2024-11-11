@@ -11,7 +11,7 @@ class _StartPageState extends State<StartPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: Colors.grey.shade900,
       body: Row(
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
@@ -23,7 +23,7 @@ class _StartPageState extends State<StartPage> {
                   width: 300,
                   margin: const EdgeInsets.all(20.0),
                   decoration: BoxDecoration(
-                      color: Colors.grey.shade900,
+                      color: Colors.blueGrey.shade900,
                       borderRadius: BorderRadius.circular(10.0)),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.start,
@@ -89,7 +89,7 @@ class _StartPageState extends State<StartPage> {
             child: Container(
               margin: const EdgeInsets.all(20.0),
               decoration: BoxDecoration(
-                  color: Colors.grey.shade900,
+                  color: Colors.blueGrey.shade900,
                   borderRadius: BorderRadius.circular(10.0)),
               child: const Column(
                 mainAxisAlignment: MainAxisAlignment.start,

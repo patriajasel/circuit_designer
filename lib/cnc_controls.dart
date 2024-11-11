@@ -2,6 +2,8 @@
 
 import 'dart:async';
 
+import 'package:circuit_designer/cnc_controls_outline_painter.dart';
+import 'package:circuit_designer/outline_carve.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -10,7 +12,17 @@ import 'package:window_manager/window_manager.dart';
 
 class CncControls extends StatefulWidget {
   final List<String>? gCodeCommands;
-  const CncControls({super.key, this.gCodeCommands});
+  final OverallOutline? designOutlines;
+  final double? scale;
+  final double? canvasWidth;
+  final double? canvasHeight;
+  const CncControls(
+      {super.key,
+      this.gCodeCommands,
+      this.designOutlines,
+      this.scale,
+      this.canvasHeight,
+      this.canvasWidth});
 
   @override
   State<CncControls> createState() => _CncControlsState();
@@ -24,6 +36,20 @@ class _CncControlsState extends State<CncControls> {
 
     _listAvailablePorts();
 
+    if (widget.designOutlines!.connectedLines.isNotEmpty) {
+      for (var connectedLines in widget.designOutlines!.connectedLines) {
+        for (int i = 0; i < connectedLines.connectingLines.length; i++) {
+          print(
+              "CNC Controls: ${connectedLines.connectingLines[i].leftStartPoint / widget.scale!}");
+          print(
+              "CNC Controls: ${connectedLines.connectingLines[i].rightStartPoint / widget.scale!}");
+          print(
+              "CNC Controls: ${connectedLines.connectingLines[i].leftEndPoint / widget.scale!}");
+          print(
+              "CNC Controls: ${connectedLines.connectingLines[i].rightStartPoint / widget.scale!}");
+        }
+      }
+    }
     super.initState();
   }
 
@@ -87,7 +113,7 @@ class _CncControlsState extends State<CncControls> {
         // Flush any residual data
         selectedPort!.flush();
 
-        await Future.delayed(Duration(milliseconds: 10000));
+        await Future.delayed(Duration(milliseconds: 1000));
 
         // Set up a listener to read the response
         reader = SerialPortReader(selectedPort!);
@@ -198,6 +224,7 @@ class _CncControlsState extends State<CncControls> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey.shade900,
       body: Row(
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
@@ -209,9 +236,10 @@ class _CncControlsState extends State<CncControls> {
                 child: SizedBox(
                   width: 400,
                   child: Card(
+                    color: Colors.blueGrey.shade800,
                     elevation: 10.0,
-                    shape: const BeveledRectangleBorder(
-                        borderRadius: BorderRadius.zero),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
@@ -223,7 +251,7 @@ class _CncControlsState extends State<CncControls> {
                                   ? Colors.lightGreenAccent.shade700
                                   : Colors.red,
                               border:
-                                  Border.all(width: 2, color: Colors.black54)),
+                                  Border.all(width: 2, color: Colors.white)),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
@@ -249,10 +277,12 @@ class _CncControlsState extends State<CncControls> {
                                 fontSize: 16, // Larger text for label
                                 fontWeight: FontWeight.bold, // Bold label text
                                 color: Colors
-                                    .black87, // Slightly faded black for a polished look
+                                    .white, // Slightly faded black for a polished look
                               ),
                             ),
                             ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.blueGrey.shade600),
                                 onPressed: () {
                                   if (isConnected == false) {
                                     setState(() {
@@ -267,12 +297,19 @@ class _CncControlsState extends State<CncControls> {
                                   }
                                 },
                                 child: Text(
-                                    isConnected ? "Disconnect" : "Connect")),
+                                  isConnected ? "Disconnect" : "Connect",
+                                  style: const TextStyle(color: Colors.white),
+                                )),
                             ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.blueGrey.shade600),
                                 onPressed: () {
                                   _listAvailablePorts();
                                 },
-                                child: const Text("Refresh"))
+                                child: const Text(
+                                  "Refresh",
+                                  style: TextStyle(color: Colors.white),
+                                ))
                           ],
                         ), // Space between label and dropdown
                         Padding(
@@ -280,19 +317,25 @@ class _CncControlsState extends State<CncControls> {
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 15),
                             decoration: BoxDecoration(
-                              color:
-                                  Colors.white, // Set the background to white
+                              color: Colors.blueGrey
+                                  .shade600, // Set the background to white
                               borderRadius:
                                   BorderRadius.circular(10), // Rounded corners
                               border: Border.all(
-                                  color: Colors
-                                      .grey.shade400), // Border around dropdown
+                                  color:
+                                      Colors.white), // Border around dropdown
                             ),
                             child: DropdownButton<String>(
                               value: portName,
-                              hint: const Text("Select a Port"),
+
+                              hint: const Text(
+                                "Select a Port",
+                                style: TextStyle(color: Colors.white),
+                              ),
                               icon: const Icon(
-                                  Icons.arrow_drop_down), // Add a dropdown icon
+                                Icons.arrow_drop_down,
+                                color: Colors.white,
+                              ), // Add a dropdown icon
                               isExpanded:
                                   true, // Ensure dropdown takes full width
                               underline: const SizedBox
@@ -333,15 +376,20 @@ class _CncControlsState extends State<CncControls> {
                               top: 30.0, bottom: 10, left: 30, right: 30),
                           decoration: BoxDecoration(
                               border:
-                                  Border.all(width: 2, color: Colors.black)),
+                                  Border.all(width: 2, color: Colors.white)),
                           child: const Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
                                 "X Axis",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white),
                               ),
-                              Text("0.000")
+                              Text(
+                                "0.000",
+                                style: TextStyle(color: Colors.white),
+                              )
                             ],
                           ),
                         ),
@@ -351,15 +399,20 @@ class _CncControlsState extends State<CncControls> {
                               horizontal: 30.0, vertical: 10),
                           decoration: BoxDecoration(
                               border:
-                                  Border.all(width: 2, color: Colors.black)),
+                                  Border.all(width: 2, color: Colors.white)),
                           child: const Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
                                 "Y Axis",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white),
                               ),
-                              Text("0.000")
+                              Text(
+                                "0.000",
+                                style: TextStyle(color: Colors.white),
+                              )
                             ],
                           ),
                         ),
@@ -369,15 +422,20 @@ class _CncControlsState extends State<CncControls> {
                               horizontal: 30.0, vertical: 10),
                           decoration: BoxDecoration(
                               border:
-                                  Border.all(width: 2, color: Colors.black)),
+                                  Border.all(width: 2, color: Colors.white)),
                           child: const Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
                                 "Z Axis",
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white),
                               ),
-                              Text("0.000")
+                              Text(
+                                "0.000",
+                                style: TextStyle(color: Colors.white),
+                              )
                             ],
                           ),
                         ),
@@ -390,9 +448,28 @@ class _CncControlsState extends State<CncControls> {
                               FilteringTextInputFormatter.digitsOnly
                             ],
                             controller: feedRateController,
+                            style: const TextStyle(
+                                color: Colors
+                                    .white), // Set input text color to white
                             decoration: const InputDecoration(
                               labelText: 'Enter Feed Rate',
-                              border: OutlineInputBorder(),
+                              labelStyle: TextStyle(
+                                  color: Colors.white), // Make label text white
+                              border: OutlineInputBorder(
+                                borderSide: BorderSide(
+                                    color: Colors
+                                        .white), // Set border color to white
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderSide: BorderSide(
+                                    color: Colors
+                                        .white), // White color when enabled
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderSide: BorderSide(
+                                    color: Colors
+                                        .white), // White color when focused
+                              ),
                             ),
                           ),
                         ),
@@ -404,28 +481,36 @@ class _CncControlsState extends State<CncControls> {
                             children: [
                               ElevatedButton(
                                   style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.blueGrey.shade600,
                                       shape: const CircleBorder(),
                                       padding: const EdgeInsets.all(20.0)),
                                   onPressed: () {},
-                                  child: const Icon(Icons.play_arrow)),
+                                  child: const Icon(Icons.play_arrow,
+                                      color: Colors.white)),
                               ElevatedButton(
                                   onPressed: () {},
                                   style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.blueGrey.shade600,
                                       shape: const CircleBorder(),
                                       padding: const EdgeInsets.all(20.0)),
-                                  child: const Icon(Icons.pause)),
+                                  child: const Icon(Icons.pause,
+                                      color: Colors.white)),
                               ElevatedButton(
                                   onPressed: () {},
                                   style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.blueGrey.shade600,
                                       shape: const CircleBorder(),
                                       padding: const EdgeInsets.all(20.0)),
-                                  child: const Icon(Icons.stop)),
+                                  child: const Icon(Icons.stop,
+                                      color: Colors.white)),
                               ElevatedButton(
                                   onPressed: () {},
                                   style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.blueGrey.shade600,
                                       shape: const CircleBorder(),
                                       padding: const EdgeInsets.all(20.0)),
-                                  child: const Icon(Icons.restart_alt))
+                                  child: const Icon(Icons.restart_alt,
+                                      color: Colors.white))
                             ],
                           ),
                         )
@@ -440,9 +525,10 @@ class _CncControlsState extends State<CncControls> {
                 child: SizedBox(
                   width: 400,
                   child: Card(
+                    color: Colors.blueGrey.shade800,
                     elevation: 10.0,
-                    shape: const BeveledRectangleBorder(
-                        borderRadius: BorderRadius.zero),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
                     child: Column(
                       children: [
                         Row(
@@ -456,7 +542,9 @@ class _CncControlsState extends State<CncControls> {
                               child: Text(
                                 "Manual Controls",
                                 style: TextStyle(
-                                    fontWeight: FontWeight.bold, fontSize: 20),
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 20,
+                                    color: Colors.white),
                               ),
                             ),
                             Padding(
@@ -602,7 +690,8 @@ class _CncControlsState extends State<CncControls> {
                                           );
                                         });
                                   },
-                                  icon: const Icon(Icons.settings)),
+                                  icon: const Icon(Icons.settings,
+                                      color: Colors.white)),
                             )
                           ],
                         ),
@@ -617,6 +706,7 @@ class _CncControlsState extends State<CncControls> {
                             children: [
                               const Text("Spindle",
                                   style: TextStyle(
+                                      color: Colors.white,
                                       fontWeight: FontWeight.bold,
                                       fontSize: 16)),
                               CupertinoSwitch(
@@ -658,15 +748,21 @@ class _CncControlsState extends State<CncControls> {
                                       setState(() {});
                                     },
                                     style: ElevatedButton.styleFrom(
+                                        backgroundColor:
+                                            Colors.blueGrey.shade600,
                                         shape: const RoundedRectangleBorder(
-                                            side: BorderSide(width: 2),
+                                            side: BorderSide(
+                                                width: 2, color: Colors.white),
                                             borderRadius: BorderRadius.all(
                                                 Radius.circular(5.0)))),
                                     child: const Row(
                                       children: [
-                                        Text("Y"),
+                                        Text("Y",
+                                            style:
+                                                TextStyle(color: Colors.white)),
                                         Icon(
                                           Icons.add,
+                                          color: Colors.white,
                                           size: 10,
                                         )
                                       ],
@@ -690,15 +786,21 @@ class _CncControlsState extends State<CncControls> {
                                       setState(() {});
                                     },
                                     style: ElevatedButton.styleFrom(
+                                        backgroundColor:
+                                            Colors.blueGrey.shade600,
                                         shape: const RoundedRectangleBorder(
-                                            side: BorderSide(width: 2),
+                                            side: BorderSide(
+                                                width: 2, color: Colors.white),
                                             borderRadius: BorderRadius.all(
                                                 Radius.circular(5.0)))),
                                     child: const Row(
                                       children: [
-                                        Text("Z"),
+                                        Text("Z",
+                                            style:
+                                                TextStyle(color: Colors.white)),
                                         Icon(
                                           Icons.add,
+                                          color: Colors.white,
                                           size: 10,
                                         )
                                       ],
@@ -721,15 +823,21 @@ class _CncControlsState extends State<CncControls> {
                                       setState(() {});
                                     },
                                     style: ElevatedButton.styleFrom(
+                                        backgroundColor:
+                                            Colors.blueGrey.shade600,
                                         shape: const RoundedRectangleBorder(
-                                            side: BorderSide(width: 2),
+                                            side: BorderSide(
+                                                width: 2, color: Colors.white),
                                             borderRadius: BorderRadius.all(
                                                 Radius.circular(5.0)))),
                                     child: const Row(
                                       children: [
-                                        Text("X"),
+                                        Text("X",
+                                            style:
+                                                TextStyle(color: Colors.white)),
                                         Icon(
                                           Icons.remove,
+                                          color: Colors.white,
                                           size: 10,
                                         )
                                       ],
@@ -753,15 +861,21 @@ class _CncControlsState extends State<CncControls> {
                                       setState(() {});
                                     },
                                     style: ElevatedButton.styleFrom(
+                                        backgroundColor:
+                                            Colors.blueGrey.shade600,
                                         shape: const RoundedRectangleBorder(
-                                            side: BorderSide(width: 2),
+                                            side: BorderSide(
+                                                width: 2, color: Colors.white),
                                             borderRadius: BorderRadius.all(
                                                 Radius.circular(5.0)))),
                                     child: const Row(
                                       children: [
-                                        Text("X"),
+                                        Text("X",
+                                            style:
+                                                TextStyle(color: Colors.white)),
                                         Icon(
                                           Icons.add,
+                                          color: Colors.white,
                                           size: 10,
                                         )
                                       ],
@@ -786,15 +900,21 @@ class _CncControlsState extends State<CncControls> {
                                       setState(() {});
                                     },
                                     style: ElevatedButton.styleFrom(
+                                        backgroundColor:
+                                            Colors.blueGrey.shade600,
                                         shape: const RoundedRectangleBorder(
-                                            side: BorderSide(width: 2),
+                                            side: BorderSide(
+                                                width: 2, color: Colors.white),
                                             borderRadius: BorderRadius.all(
                                                 Radius.circular(5.0)))),
                                     child: const Row(
                                       children: [
-                                        Text("Y"),
+                                        Text("Y",
+                                            style:
+                                                TextStyle(color: Colors.white)),
                                         Icon(
                                           Icons.remove,
+                                          color: Colors.white,
                                           size: 10,
                                         )
                                       ],
@@ -818,15 +938,22 @@ class _CncControlsState extends State<CncControls> {
                                       setState(() {});
                                     },
                                     style: ElevatedButton.styleFrom(
+                                        backgroundColor:
+                                            Colors.blueGrey.shade600,
                                         shape: const RoundedRectangleBorder(
-                                            side: BorderSide(width: 2),
+                                            side: BorderSide(
+                                                width: 2, color: Colors.white),
                                             borderRadius: BorderRadius.all(
                                                 Radius.circular(5.0)))),
                                     child: const Row(
                                       children: [
-                                        Text("Z"),
+                                        Text(
+                                          "Z",
+                                          style: TextStyle(color: Colors.white),
+                                        ),
                                         Icon(
                                           Icons.remove,
+                                          color: Colors.white,
                                           size: 10,
                                         )
                                       ],
@@ -842,20 +969,26 @@ class _CncControlsState extends State<CncControls> {
               ),
             ],
           ),
+
+          // This section is for consol and GCode Viewer
           Column(
             children: [
               Expanded(
                   child: SizedBox(
                 width: 600,
                 child: Card(
+                  color: Colors.blueGrey.shade800,
                   elevation: 10.0,
-                  shape: const RoundedRectangleBorder(),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10)),
                   child: Column(
                     children: [
                       const Text(
                         "Console",
                         style: TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 20),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 20,
+                            color: Colors.white),
                       ),
                       Expanded(
                         flex: 3,
@@ -864,12 +997,15 @@ class _CncControlsState extends State<CncControls> {
                               vertical: 10.0, horizontal: 20),
                           child: Card(
                             child: Container(
-                                color: Colors.white,
+                                decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(10),
+                                    color: Colors.white),
                                 child: ListView.builder(
                                     itemCount: 0,
                                     reverse: true,
                                     itemBuilder: (context, index) {
-                                      return ListTile(title: Text("NONE"));
+                                      return const ListTile(
+                                          title: Text("NONE"));
                                     })),
                           ),
                         ),
@@ -880,7 +1016,9 @@ class _CncControlsState extends State<CncControls> {
                               vertical: 10.0, horizontal: 20),
                           child: Card(
                             child: Container(
-                                color: Colors.white,
+                                decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(10),
+                                    color: Colors.white),
                                 child: ListView.builder(
                                     itemCount: textsToDisplay.length,
                                     reverse: true,
@@ -896,8 +1034,10 @@ class _CncControlsState extends State<CncControls> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 20.0),
                         child: Card(
+                          clipBehavior: Clip.antiAliasWithSaveLayer,
+                          color: Colors.blueGrey.shade800,
                           child: Container(
-                            height: 50,
+                            height: 48,
                             color: Colors.white,
                             child: Align(
                               alignment: Alignment.bottomLeft,
@@ -926,6 +1066,53 @@ class _CncControlsState extends State<CncControls> {
                 ),
               )),
             ],
+          ),
+
+          // This is for the design Viewer
+          Expanded(
+            child: Container(
+              margin: const EdgeInsets.all(5),
+              decoration: BoxDecoration(
+                  color: Colors.blueGrey.shade800,
+                  borderRadius: BorderRadius.circular(10)),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  const Text(
+                    "Design Viewer",
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
+                        color: Colors.white),
+                  ),
+                  Expanded(
+                      child: Container(
+                    margin: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(10)),
+                    child: Center(
+                      child: Container(
+                        margin: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                                width: 2.0, color: Colors.blueGrey.shade900)),
+                        child: CustomPaint(
+                          painter: OutlinePainter(
+                              widget.designOutlines!.connectedLines,
+                              widget.designOutlines!.arcs,
+                              widget.scale!,
+                              widget.designOutlines!.smdOutline),
+                          size: Size(widget.canvasWidth!, widget.canvasHeight!),
+                        ),
+                      ),
+                    ),
+                  ))
+                ],
+              ),
+            ),
           ),
         ],
       ),

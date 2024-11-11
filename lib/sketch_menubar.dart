@@ -87,7 +87,7 @@ class MenuActions {
       ],
       menuStyle:
           const MenuStyle(padding: WidgetStatePropertyAll(EdgeInsets.all(5))),
-      child: const Text("File"),
+      child: const Text("File", style: TextStyle(color: Colors.white)),
     );
   }
 
@@ -105,7 +105,7 @@ class MenuActions {
       ],
       menuStyle:
           const MenuStyle(padding: WidgetStatePropertyAll(EdgeInsets.all(5))),
-      child: const Text("Edit"),
+      child: const Text("Edit", style: TextStyle(color: Colors.white)),
     );
   }
 
@@ -115,20 +115,25 @@ class MenuActions {
       Function(int, int) updateCanvasSize,
       int currentCanvasHeight,
       int currentCanvasWidth) {
-    return SubmenuButton(menuChildren: [
-      _addMenuItem(
-          'Canvas Settings',
-          () => canvasSettings(context, updateCanvasSize, currentCanvasHeight,
-              currentCanvasWidth)),
-      _addMenuItem('Open Configuration', () => print('Settings clicked')),
-    ], child: const Text("Settings"));
+    return SubmenuButton(
+        menuChildren: [
+          _addMenuItem(
+              'Canvas Settings',
+              () => canvasSettings(context, updateCanvasSize,
+                  currentCanvasHeight, currentCanvasWidth)),
+          _addMenuItem('Open Configuration', () => print('Settings clicked')),
+        ],
+        child: const Text(
+          "Settings",
+          style: TextStyle(color: Colors.white),
+        ));
   }
 
   // * Building Help Menu in Menu bar
   SubmenuButton buildHelpMenu() {
     return SubmenuButton(menuChildren: [
       _addMenuItem('About Us', () => print('Help clicked')),
-    ], child: const Text("Help"));
+    ], child: const Text("Help", style: TextStyle(color: Colors.white)));
   }
 
   // * Adding Menu Item for menu

@@ -1,5 +1,16 @@
 import 'package:flutter/material.dart';
 
+class OverallOutline {
+  List<ConnectingLines> connectedLines;
+  List<SMDOutline> smdOutline;
+  List<Arc> arcs;
+
+  OverallOutline(
+      {required this.connectedLines,
+      required this.smdOutline,
+      required this.arcs});
+}
+
 class ConnectingLines {
   List<Outlines> connectingLines;
 
@@ -38,4 +49,17 @@ class SMDOutline {
       required this.bottomRight,
       required this.connectedLeftLine,
       required this.connectedRightLine});
+}
+
+class Arc {
+  Offset startPoint;
+  Offset endPoint;
+  Offset centerPoint;
+  double radius;
+
+  Arc(
+      {required this.startPoint,
+      required this.endPoint,
+      required this.centerPoint,
+      required this.radius});
 }

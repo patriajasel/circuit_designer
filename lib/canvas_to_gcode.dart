@@ -2,7 +2,6 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:ui';
 
-import 'package:circuit_designer/footprints_arcs.dart';
 import 'package:circuit_designer/line_traces.dart';
 import 'package:circuit_designer/outline_carve.dart';
 import 'package:path_provider/path_provider.dart';
@@ -20,27 +19,39 @@ class GCodeConverter {
   List<Arc> arcsToDrill = [];
 
   List<String> convertCanvasToGCode(
-      List<Arc> arcs, List<ConnectingLines> outlines, double scale) {
+      List<Arc> arcs,
+      List<ConnectingLines> outlines,
+      List<GCodeLines> smdGCodes,
+      double scale) {
     arcsToDrill.addAll(arcs);
 
-    print(arcsToDrill);
     // Prepare gCodeLines based on outlines
     for (var outline in outlines) {
+      for (int i = 0; i < outline.connectingLines.length; i++) {
+        print("G Code: ${outline.connectingLines[i].leftStartPoint / scale}");
+        print("G Code: ${outline.connectingLines[i].rightStartPoint / scale}");
+        print("G Code: ${outline.connectingLines[i].leftEndPoint / scale}");
+        print("G Code: ${outline.connectingLines[i].rightStartPoint / scale}");
+      }
       disperseOutLines(outline);
-      //print(outline);
     }
 
     // Debugging: Print lines and pads
-    /*for (var line in gCodeLines) {
-      print("line");
-      print(line.startOffset / scale);
-      print(line.endOffset / scale);
-    }
+    for (var line in gCodeLines) {
+      print("line #${gCodeLines.indexOf(line)}");
+      print("GCode StartPoint: ${line.startOffset / scale}");
+      print("GCode EndPoint: ${line.endOffset / scale}");
+    } 
 
-    for (var arc in arcs) {
-      print("pad");
-      print(arc.startPoint / scale);
-      print(arc.endPoint / scale);
+    /* for (var arc in arcs) {
+      print("pad #${arcs.indexOf(arc)}");
+      print("Arc StartPoint: ${arc.startPoint / scale}");
+      print("Arc EndPoint: ${arc.endPoint / scale}");
+    }*/
+
+    /*for (var gCodes in smdGCodes) {
+      print(gCodes.startOffset);
+      print(gCodes.endOffset);
     } */
 
     for (int i = 0; i < outlines.length; i++) {

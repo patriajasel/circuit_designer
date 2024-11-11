@@ -35,7 +35,8 @@ class _CompAndPartsSectionState extends State<CompAndPartsSection> {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
+    return Container(
+      color: Colors.blueGrey.shade900,
       width: 300.0,
       child: Column(
         children: [
@@ -48,9 +49,9 @@ class _CompAndPartsSectionState extends State<CompAndPartsSection> {
 
   // This is the component library section
   Expanded componentLibrary(List<Package> packages) {
-    final TextEditingController searchTextController = TextEditingController();
     return Expanded(
         child: Card(
+      color: Colors.transparent,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
       elevation: 10.0,
       child: Column(
@@ -60,8 +61,11 @@ class _CompAndPartsSectionState extends State<CompAndPartsSection> {
             child: Padding(
               padding: EdgeInsets.only(top: 8.0, left: 8.0, right: 8.0),
               child: Text(
-                "Component's Library",
-                style: TextStyle(fontFamily: "Arvo", fontSize: 16.0),
+                "PCB Footprint's Library",
+                style: TextStyle(
+                    fontFamily: "Righteous",
+                    fontSize: 18.0,
+                    color: Colors.white),
               ),
             ),
           ),
@@ -69,36 +73,37 @@ class _CompAndPartsSectionState extends State<CompAndPartsSection> {
             padding: EdgeInsets.only(left: 8.0, right: 8.0),
             child: Divider(thickness: 2),
           ),
-          SizedBox(
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: CupertinoSearchTextField(
-                backgroundColor: Colors.white,
-                placeholder: "Search Components...",
-                style: const TextStyle(fontSize: 14.0),
-                controller: searchTextController,
-              ),
-            ),
-          ),
           Expanded(
             child: Container(
               width: double.infinity,
               margin: const EdgeInsets.all(8.0),
               child: Card(
                 elevation: 0,
-                color: Colors.white,
+                color: Colors.blueGrey.shade800,
                 child: ListView.builder(
                   itemCount: packages.length,
                   itemBuilder: (context, index) {
                     final package = packages[index];
                     return ExpansionTile(
+                      iconColor: Colors.white,
+                      collapsedIconColor: Colors.white,
                       title: Text(
                         package.packageType,
-                        style: const TextStyle(fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            fontFamily: "Righteous",
+                            letterSpacing: 2),
                       ),
                       children: package.components.map((component) {
                         return ListTile(
-                          title: Text(component.name),
+                          title: Text(
+                            "-> ${component.name}",
+                            style: const TextStyle(
+                                color: Colors.white,
+                                fontFamily: "Righteous",
+                                fontSize: 14.0),
+                          ),
                           onTap: () {
                             setState(() {
                               // For passing the component and adding dragging features.
@@ -109,7 +114,6 @@ class _CompAndPartsSectionState extends State<CompAndPartsSection> {
                                   isHovered: false,
                                   boundingBox:
                                       BoundingBox.calculate(component)));
-                                
                             });
                           },
                         );
@@ -130,6 +134,7 @@ class _CompAndPartsSectionState extends State<CompAndPartsSection> {
     final TextEditingController lineWidth = TextEditingController(text: "1.0");
     return Expanded(
       child: Card(
+        color: Colors.transparent,
         shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
         elevation: 10.0,
         child: Column(
@@ -140,7 +145,10 @@ class _CompAndPartsSectionState extends State<CompAndPartsSection> {
                 padding: EdgeInsets.only(top: 8.0, left: 8.0, right: 8.0),
                 child: Text(
                   "Parts Section",
-                  style: TextStyle(fontFamily: "Arvo", fontSize: 16.0),
+                  style: TextStyle(
+                      fontFamily: "Righteous",
+                      fontSize: 16.0,
+                      color: Colors.white),
                 ),
               ),
             ),
@@ -151,10 +159,9 @@ class _CompAndPartsSectionState extends State<CompAndPartsSection> {
                 width: double.infinity,
                 margin: const EdgeInsets.all(8.0),
                 child: Card(
-                  shape: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.zero),
+                  clipBehavior: Clip.antiAliasWithSaveLayer,
                   elevation: 0,
-                  color: Colors.white,
+                  color: Colors.blueGrey.shade800,
                   child: ListView.builder(
                     itemCount: footprints.length,
                     itemBuilder: (context, index) {
@@ -180,9 +187,9 @@ class _CompAndPartsSectionState extends State<CompAndPartsSection> {
                             clipBehavior: Clip.none,
                             padding: const EdgeInsets.all(10.0),
                             color: footprints[index].isHovered
-                                ? Colors.blue.shade50
+                                ? Colors.blueGrey.shade600
                                 : footprints[index].isSelected
-                                    ? Colors.blue.shade100
+                                    ? Colors.blueGrey.shade700
                                     : null,
                             height: 40,
                             width: double.infinity,
@@ -191,7 +198,8 @@ class _CompAndPartsSectionState extends State<CompAndPartsSection> {
                               children: [
                                 Text(
                                   footprints[index].component.name,
-                                  style: const TextStyle(fontSize: 16.0),
+                                  style: const TextStyle(
+                                      fontSize: 16.0, color: Colors.white),
                                 ),
                               ],
                             ),
@@ -210,7 +218,10 @@ class _CompAndPartsSectionState extends State<CompAndPartsSection> {
                 padding: EdgeInsets.only(top: 8.0, left: 8.0, right: 8.0),
                 child: Text(
                   "Line Traces",
-                  style: TextStyle(fontFamily: "Arvo", fontSize: 16.0),
+                  style: TextStyle(
+                      fontFamily: "Righteous",
+                      fontSize: 16.0,
+                      color: Colors.white),
                 ),
               ),
             ),
@@ -219,10 +230,9 @@ class _CompAndPartsSectionState extends State<CompAndPartsSection> {
                 width: double.infinity,
                 margin: const EdgeInsets.all(8.0),
                 child: Card(
-                  shape: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.zero),
+                  clipBehavior: Clip.antiAliasWithSaveLayer,
                   elevation: 0,
-                  color: Colors.white,
+                  color: Colors.blueGrey.shade800,
                   child: ListView.builder(
                     itemCount: lines.length,
                     itemBuilder: (context, index) {
@@ -252,7 +262,7 @@ class _CompAndPartsSectionState extends State<CompAndPartsSection> {
                                               child: Text(
                                                 "Enter Line Width",
                                                 style: TextStyle(
-                                                    fontFamily: "Arvo",
+                                                    fontFamily: "Righteous",
                                                     fontSize: 16),
                                               ),
                                             ),
@@ -339,9 +349,9 @@ class _CompAndPartsSectionState extends State<CompAndPartsSection> {
                             clipBehavior: Clip.none,
                             padding: const EdgeInsets.all(10.0),
                             color: lines[index].isHovered
-                                ? Colors.blue.shade50
+                                ? Colors.blueGrey.shade600
                                 : lines[index].isSelected
-                                    ? Colors.blue.shade100
+                                    ? Colors.blueGrey.shade700
                                     : null,
                             height: 40,
                             width: double.infinity,
@@ -350,7 +360,8 @@ class _CompAndPartsSectionState extends State<CompAndPartsSection> {
                               children: [
                                 Text(
                                   lines[index].name,
-                                  style: const TextStyle(fontSize: 16.0),
+                                  style: const TextStyle(
+                                      fontSize: 16.0, color: Colors.white),
                                 ),
                               ],
                             ),
