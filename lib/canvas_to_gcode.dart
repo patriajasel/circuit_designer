@@ -7,6 +7,7 @@ import 'package:circuit_designer/outline_carve.dart';
 import 'package:path_provider/path_provider.dart';
 
 class GCodeConverter {
+  List<List<String>> compiledGcodeCommands = [];
   List<String> gCodeCommands = [];
   List<GCodeLines> gCodeLines = [];
   Offset? arcCenter;
@@ -17,6 +18,8 @@ class GCodeConverter {
   double? cwI;
   double? cwJ;
   List<Arc> arcsToDrill = [];
+  List<int> arcsToRemove = [];
+  double? currentRadius;
 
   List<String> convertCanvasToGCode(
       List<Arc> arcs,
@@ -27,32 +30,8 @@ class GCodeConverter {
 
     // Prepare gCodeLines based on outlines
     for (var outline in outlines) {
-      for (int i = 0; i < outline.connectingLines.length; i++) {
-        print("G Code: ${outline.connectingLines[i].leftStartPoint / scale}");
-        print("G Code: ${outline.connectingLines[i].rightStartPoint / scale}");
-        print("G Code: ${outline.connectingLines[i].leftEndPoint / scale}");
-        print("G Code: ${outline.connectingLines[i].rightStartPoint / scale}");
-      }
       disperseOutLines(outline);
     }
-
-    // Debugging: Print lines and pads
-    for (var line in gCodeLines) {
-      print("line #${gCodeLines.indexOf(line)}");
-      print("GCode StartPoint: ${line.startOffset / scale}");
-      print("GCode EndPoint: ${line.endOffset / scale}");
-    } 
-
-    /* for (var arc in arcs) {
-      print("pad #${arcs.indexOf(arc)}");
-      print("Arc StartPoint: ${arc.startPoint / scale}");
-      print("Arc EndPoint: ${arc.endPoint / scale}");
-    }*/
-
-    /*for (var gCodes in smdGCodes) {
-      print(gCodes.startOffset);
-      print(gCodes.endOffset);
-    } */
 
     for (int i = 0; i < outlines.length; i++) {
       // Start point of the GCode path
@@ -63,21 +42,20 @@ class GCodeConverter {
       if (i == 0) {
         gCodeCommands.add(gCode("millimeters"));
         gCodeCommands.add(gCode("absolute"));
-        gCodeCommands.add("G0 Z5;");
+        gCodeCommands.add("G0 Z10;");
         gCodeCommands.add(gCode("home"));
       }
 
-      gCodeCommands.add("G0 Z5;");
+      gCodeCommands.add("G0 Z10 F1000;");
       gCodeCommands
-          .add("${gCode("move")} X${firstOffset.dx} Y${firstOffset.dy} F1000");
+          .add("${gCode("move")} X${firstOffset.dx} Y${firstOffset.dy}");
+      gCodeCommands.add("M3;");
+      gCodeCommands.add("G0 Z-0.398 F400;");
 
       currentOffset = outlines[i].connectingLines.first.leftStartPoint / scale;
-      print("Outline #$i");
       do {
         Offset? newOffset = checkLines(currentOffset, scale) ??
             checkPads(currentOffset, arcs, scale);
-
-        print("New Offset = $newOffset");
 
         if (newOffset != null) {
           // Check if newOffset is not null before accessing it
@@ -100,26 +78,46 @@ class GCodeConverter {
         }
       } while (currentOffset != firstOffset);
     }
-    gCodeCommands.add("G0 Z5;");
 
-    for (var arc in arcsToDrill) {
-      gCodeCommands.add("G0 Z0 F1000");
+    while (arcsToDrill.isNotEmpty) {
+      List<int> arcsToRemove = [];
 
-      gCodeCommands.add(
-          "${gCode("move")} X${(arc.centerPoint.dx / scale) - ((arc.radius / scale) / 2)} Y${arc.centerPoint.dy / scale}");
-      gCodeCommands.add(
-          "${gCode("arcCW")} X${(arc.centerPoint.dx / scale) - ((arc.radius / scale) / 2)} Y${arc.centerPoint.dy / scale} I${((arc.radius / scale) / 2)}");
-      gCodeCommands.add("G0 Z5;");
+      for (int i = 0; i < arcsToDrill.length; i++) {
+        currentRadius ??= (arcsToDrill[i].radius / 2) / scale;
+
+        gCodeCommands.add("G0 Z10 F1000;");
+        gCodeCommands.add("(Drilling)");
+        gCodeCommands.add("(${(arcsToDrill[i].radius / 2) / scale})");
+
+        if (((arcsToDrill[i].radius / 2) / scale) == currentRadius) {
+          gCodeCommands.add(
+              "${gCode("move")} X${(arcsToDrill[i].centerPoint.dx / scale)} Y${arcsToDrill[i].centerPoint.dy / scale};");
+          gCodeCommands.add("G0 Z5");
+          gCodeCommands.add("G1 Z-1.2 F300");
+
+          arcsToRemove.add(i);
+        }
+      }
+
+      // Remove items in reverse order to avoid index shifting
+      for (var index in arcsToRemove.reversed) {
+        arcsToDrill.removeAt(index);
+      }
+
+      // Reset arcsToRemove and currentRadius for the next iteration
+      arcsToRemove.clear();
+      currentRadius = null;
     }
 
-    // Finalize GCode commands
+    gCodeCommands.add("G0 Z10;");
 
     gCodeCommands.add("M5"); // Stop spindle
     gCodeCommands.add("M30"); // End of program
 
-    saveGcodeFile("GCodeTest", gCodeCommands);
-
+    saveGcodeFile("engrave", gCodeCommands);
     return gCodeCommands;
+
+    // Finalize GCode commands
   }
 
   void disperseOutLines(ConnectingLines connectingLines) {
@@ -299,3 +297,21 @@ class GCodeConverter {
     }
   }
 }
+
+    // Debugging: Print lines and pads
+    /* for (var line in gCodeLines) {
+      print("line #${gCodeLines.indexOf(line)}");
+      print("GCode StartPoint: ${line.startOffset / scale}");
+      print("GCode EndPoint: ${line.endOffset / scale}");
+    }
+
+    for (var arc in arcs) {
+      print("pad #${arcs.indexOf(arc)}");
+      print("Arc StartPoint: ${arc.startPoint / scale}");
+      print("Arc EndPoint: ${arc.endPoint / scale}");
+    } */
+
+    /*for (var gCodes in smdGCodes) {
+      print(gCodes.startOffset);
+      print(gCodes.endOffset);
+    } */

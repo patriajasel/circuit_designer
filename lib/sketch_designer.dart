@@ -450,8 +450,9 @@ class _SketchboardState extends State<Sketchboard> {
 
                                     List<String> gCodes = GCodeConverter()
                                         .convertCanvasToGCode(
-                                            allOutlines.arcs,
-                                            allOutlines.connectedLines,
+                                            List.from(allOutlines.arcs),
+                                            List.from(
+                                                allOutlines.connectedLines),
                                             smdGCodes!,
                                             scale);
 

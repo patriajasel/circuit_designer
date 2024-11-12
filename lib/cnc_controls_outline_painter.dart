@@ -21,89 +21,26 @@ class OutlinePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    print("I am here");
+    print("Arcs Length: ${arcs.length}");
     if (connectingLines.isNotEmpty) {
       Paint linePaint = Paint()
         ..color = Colors.blue
         ..style = PaintingStyle.stroke;
 
       for (var connectedLines in connectingLines) {
-        for (int i = 0; i < connectedLines.connectingLines.length; i++) {
-          Offset currentLeftStart =
-              connectedLines.connectingLines[i].leftStartPoint / scale;
-          Offset currentLeftEnd =
-              connectedLines.connectingLines[i].leftEndPoint / scale;
-          Offset currentRightStart =
-              connectedLines.connectingLines[i].rightStartPoint / scale;
-          Offset currentRightEnd =
-              connectedLines.connectingLines[i].rightEndPoint / scale;
-
-          if (previousRightEnd != null &&
-              previousRightStart != null &&
-              previousLeftEnd != null &&
-              previousLeftStart != null) {
-            Offset? rightAdjustedOffset = findIntersectionOfLines(
-                previousRightStart!,
-                previousRightEnd!,
-                currentRightStart,
-                currentRightEnd);
-
-            if (rightAdjustedOffset != null) {
-              connectedLines.connectingLines[i].rightStartPoint =
-                  rightAdjustedOffset * scale;
-
-              connectedLines.connectingLines[i - 1].rightEndPoint =
-                  rightAdjustedOffset * scale;
-            }
-
-            Offset? leftAdjustedOffset = findIntersectionOfLines(
-                previousLeftStart!,
-                previousLeftEnd!,
-                currentLeftStart,
-                currentLeftEnd);
-
-            if (leftAdjustedOffset != null) {
-              connectedLines.connectingLines[i].leftStartPoint =
-                  leftAdjustedOffset * scale;
-
-              connectedLines.connectingLines[i - 1].leftEndPoint =
-                  leftAdjustedOffset * scale;
-            }
-          }
-
-          previousRightStart = currentRightStart;
-          previousRightEnd = currentRightEnd;
-
-          previousLeftStart = currentLeftStart;
-          previousLeftEnd = currentLeftEnd;
-        }
-
-        previousLeftEnd = null;
-        previousLeftStart = null;
-        previousRightEnd = null;
-        previousRightStart = null;
-      }
-
-      for (var connectedLines in connectingLines) {
         for (var connectingLines in connectedLines.connectingLines) {
           canvas.drawLine(connectingLines.leftStartPoint,
               connectingLines.leftEndPoint, linePaint);
 
-          print("Real Outline: ${connectingLines.leftStartPoint / scale}");
-          print("Real Outline: ${connectingLines.leftEndPoint / scale}");
-
-          canvas.drawCircle(
-              Offset(14.9, 9.8) * scale, 5, Paint()..color = Colors.black);
-
           canvas.drawLine(connectingLines.rightStartPoint,
               connectingLines.rightEndPoint, linePaint);
-
-          print("Real Outline: ${connectingLines.rightStartPoint / scale}");
-          print("Real Outline: ${connectingLines.rightEndPoint / scale}");
         }
       }
     }
 
     if (arcs.isNotEmpty) {
+      print("Arc is not Empty");
       final paint = Paint()
         ..color = Colors.blue
         ..strokeWidth = 1.0

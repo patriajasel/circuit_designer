@@ -36,20 +36,6 @@ class _CncControlsState extends State<CncControls> {
 
     _listAvailablePorts();
 
-    if (widget.designOutlines!.connectedLines.isNotEmpty) {
-      for (var connectedLines in widget.designOutlines!.connectedLines) {
-        for (int i = 0; i < connectedLines.connectingLines.length; i++) {
-          print(
-              "CNC Controls: ${connectedLines.connectingLines[i].leftStartPoint / widget.scale!}");
-          print(
-              "CNC Controls: ${connectedLines.connectingLines[i].rightStartPoint / widget.scale!}");
-          print(
-              "CNC Controls: ${connectedLines.connectingLines[i].leftEndPoint / widget.scale!}");
-          print(
-              "CNC Controls: ${connectedLines.connectingLines[i].rightStartPoint / widget.scale!}");
-        }
-      }
-    }
     super.initState();
   }
 
@@ -484,7 +470,9 @@ class _CncControlsState extends State<CncControls> {
                                       backgroundColor: Colors.blueGrey.shade600,
                                       shape: const CircleBorder(),
                                       padding: const EdgeInsets.all(20.0)),
-                                  onPressed: () {},
+                                  onPressed: () {
+                                    // For sending all the gCode commands to grbl
+                                  },
                                   child: const Icon(Icons.play_arrow,
                                       color: Colors.white)),
                               ElevatedButton(
@@ -496,7 +484,9 @@ class _CncControlsState extends State<CncControls> {
                                   child: const Icon(Icons.pause,
                                       color: Colors.white)),
                               ElevatedButton(
-                                  onPressed: () {},
+                                  onPressed: () {
+                                    _sendGCode("!");
+                                  },
                                   style: ElevatedButton.styleFrom(
                                       backgroundColor: Colors.blueGrey.shade600,
                                       shape: const CircleBorder(),
@@ -504,7 +494,12 @@ class _CncControlsState extends State<CncControls> {
                                   child: const Icon(Icons.stop,
                                       color: Colors.white)),
                               ElevatedButton(
-                                  onPressed: () {},
+                                  onPressed: () {
+                                    _sendGCode("G10 L20 P1 X0 Y0");
+                                    textsToDisplay.insert(
+                                        0, "-> G10 L20 P1 X0 Y0");
+                                    setState(() {});
+                                  },
                                   style: ElevatedButton.styleFrom(
                                       backgroundColor: Colors.blueGrey.shade600,
                                       shape: const CircleBorder(),
@@ -741,9 +736,9 @@ class _CncControlsState extends State<CncControls> {
                                             "Error: Feed Rate not specified");
                                       } else {
                                         _sendGCode(
-                                            "G1 X0 Y${stepSizeY.text} F${feedRateController.text}");
+                                            "G91 G1 X0 Y${stepSizeY.text} F${feedRateController.text}");
                                         textsToDisplay.insert(0,
-                                            "-> G1 X0 Y${stepSizeY.text} F${feedRateController.text}");
+                                            "-> G91 G1 X0 Y${stepSizeY.text} F${feedRateController.text}");
                                       }
                                       setState(() {});
                                     },
@@ -779,9 +774,9 @@ class _CncControlsState extends State<CncControls> {
                                             "Error: Feed Rate not specified");
                                       } else {
                                         _sendGCode(
-                                            "G0 Z${stepSizeZ.text} F${feedRateController.text}");
+                                            "G91 G0 Z${stepSizeZ.text} F${feedRateController.text}");
                                         textsToDisplay.insert(0,
-                                            "-> G0 Z${stepSizeZ.text} F${feedRateController.text}");
+                                            "-> G91 G0 Z${stepSizeZ.text} F${feedRateController.text}");
                                       }
                                       setState(() {});
                                     },
@@ -816,9 +811,9 @@ class _CncControlsState extends State<CncControls> {
                                             "Error: Feed Rate not specified");
                                       } else {
                                         _sendGCode(
-                                            "G1 X-${stepSizeX.text} Y0 F${feedRateController.text}");
+                                            "G91 G1 X-${stepSizeX.text} Y0 F${feedRateController.text}");
                                         textsToDisplay.insert(0,
-                                            "-> G1 X-${stepSizeX.text} Y0 F${feedRateController.text}");
+                                            "-> G91 G1 X-${stepSizeX.text} Y0 F${feedRateController.text}");
                                       }
                                       setState(() {});
                                     },
@@ -843,7 +838,31 @@ class _CncControlsState extends State<CncControls> {
                                       ],
                                     )),
                               ),
-                              Container(),
+                              Container(
+                                margin: const EdgeInsets.all(5),
+                                padding: const EdgeInsets.all(10),
+                                child: ElevatedButton(
+                                    onPressed: () {
+                                      setState(() {
+                                        _sendGCode("G0 X0 Y0");
+                                        textsToDisplay.insert(
+                                            0, "-> G90 G0 X0 Y0");
+                                      });
+                                    },
+                                    style: ElevatedButton.styleFrom(
+                                        backgroundColor:
+                                            Colors.blueGrey.shade600,
+                                        shape: const RoundedRectangleBorder(
+                                            side: BorderSide(
+                                                width: 2, color: Colors.white),
+                                            borderRadius: BorderRadius.all(
+                                                Radius.circular(5.0)))),
+                                    child: const Icon(
+                                      Icons.home,
+                                      color: Colors.white,
+                                      size: 20,
+                                    )),
+                              ),
                               Container(
                                 margin: const EdgeInsets.all(5),
                                 padding: const EdgeInsets.all(10),
@@ -854,9 +873,9 @@ class _CncControlsState extends State<CncControls> {
                                             0, "Error: Feed Rate no specified");
                                       } else {
                                         _sendGCode(
-                                            "G1 X${stepSizeX.text} Y0 F${feedRateController.text}");
+                                            "G91 G1 X${stepSizeX.text} Y0 F${feedRateController.text}");
                                         textsToDisplay.insert(0,
-                                            "-> G1 X${stepSizeX.text} Y0 F${feedRateController.text}");
+                                            "-> G91 G1 X${stepSizeX.text} Y0 F${feedRateController.text}");
                                       }
                                       setState(() {});
                                     },
@@ -893,9 +912,9 @@ class _CncControlsState extends State<CncControls> {
                                             0, "Error: Feed Rate no specified");
                                       } else {
                                         _sendGCode(
-                                            "G1 X0 Y-${stepSizeY.text} F${feedRateController.text}");
+                                            "G91 G1 X0 Y-${stepSizeY.text} F${feedRateController.text}");
                                         textsToDisplay.insert(0,
-                                            "-> G1 X0 Y-${stepSizeY.text} F${feedRateController.text}");
+                                            "-> G91 G1 X0 Y-${stepSizeY.text} F${feedRateController.text}");
                                       }
                                       setState(() {});
                                     },
@@ -931,9 +950,9 @@ class _CncControlsState extends State<CncControls> {
                                             0, "Error: Feed Rate no specified");
                                       } else {
                                         _sendGCode(
-                                            "G0 Z-${stepSizeZ.text} F${feedRateController.text}");
+                                            "G91 G0 Z-${stepSizeZ.text} F${feedRateController.text}");
                                         textsToDisplay.insert(0,
-                                            "-> G0 Z-${stepSizeZ.text} F${feedRateController.text}");
+                                            "-> G91 G0 Z-${stepSizeZ.text} F${feedRateController.text}");
                                       }
                                       setState(() {});
                                     },
@@ -1001,11 +1020,12 @@ class _CncControlsState extends State<CncControls> {
                                     borderRadius: BorderRadius.circular(10),
                                     color: Colors.white),
                                 child: ListView.builder(
-                                    itemCount: 0,
-                                    reverse: true,
+                                    itemCount: widget.gCodeCommands!.length,
+                                    reverse: false,
                                     itemBuilder: (context, index) {
-                                      return const ListTile(
-                                          title: Text("NONE"));
+                                      return ListTile(
+                                          title: Text(
+                                              widget.gCodeCommands![index]));
                                     })),
                           ),
                         ),
