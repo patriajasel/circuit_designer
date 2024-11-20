@@ -21,8 +21,6 @@ class OutlinePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    print("I am here");
-    print("Arcs Length: ${arcs.length}");
     if (connectingLines.isNotEmpty) {
       Paint linePaint = Paint()
         ..color = Colors.blue

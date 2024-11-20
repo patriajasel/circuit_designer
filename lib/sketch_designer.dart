@@ -66,6 +66,9 @@ class _SketchboardState extends State<Sketchboard> {
   List<SMDOutline>? smdOutlines;
   List<GCodeLines>? smdGCodes;
 
+  String? filePath;
+  String? fileName;
+
   List<bool> isClicked = List.generate(5, (index) => false);
 
   @override
@@ -76,8 +79,7 @@ class _SketchboardState extends State<Sketchboard> {
     loadJsonFiles();
     focusNode.requestFocus();
 
-    if (widget.footprintsFromJson!.isNotEmpty ||
-        widget.linesFromJson!.isNotEmpty) {
+    if (widget.footprintsFromJson != null || widget.linesFromJson != null) {
       compToDisplay = widget.footprintsFromJson!;
       lines = widget.linesFromJson!;
     }
@@ -96,6 +98,16 @@ class _SketchboardState extends State<Sketchboard> {
       canvasWidthInPixels = 25.4 * width.toDouble();
       canvasHeightInInches = height;
       canvasWidthInInches = width;
+    });
+  }
+
+  void updateFilePath(String receivedFilePath, String receivedFileName) {
+    setState(() {
+      filePath = receivedFilePath;
+      fileName = receivedFileName;
+
+      print(receivedFilePath);
+      print(receivedFileName);
     });
   }
 
@@ -146,8 +158,11 @@ class _SketchboardState extends State<Sketchboard> {
 
   @override
   Widget build(BuildContext context) {
-    MenuActions menuActions =
-        MenuActions(footprints: compToDisplay, lines: lines, context: context);
+    MenuActions menuActions = MenuActions(
+        footprints: compToDisplay,
+        lines: lines,
+        context: context,
+        sendPath: updateFilePath);
     Offset position = Offset(canvasWidthInPixels / 2, canvasHeightInPixels / 2);
 
     return Scaffold(
@@ -451,19 +466,32 @@ class _SketchboardState extends State<Sketchboard> {
                               right: 20.0,
                               bottom: 20.0,
                               child: ElevatedButton(
-                                  onPressed: () {
+                                  onPressed: () async {
+                                    await saveDesign(compToDisplay, lines,
+                                        context, updateFilePath);
+
+                                    print(fileName);
+
                                     OverallOutline allOutlines = OverallOutline(
                                         connectedLines: lineOutlines!,
                                         smdOutline: smdOutlines!,
                                         arcs: arcsOutlines!);
 
                                     List<String> gCodes = GCodeConverter()
-                                        .convertCanvasToGCode(
+                                        .convertOutlineToGCode(
                                             List.from(allOutlines.arcs),
                                             List.from(
                                                 allOutlines.connectedLines),
                                             smdGCodes!,
-                                            scale);
+                                            scale,
+                                            filePath!,
+                                            fileName!);
+
+                                    GCodeConverter().arcHoleToGCode(
+                                        List.from(allOutlines.arcs),
+                                        scale,
+                                        filePath!,
+                                        fileName!);
 
                                     Navigator.of(context)
                                         .push(MaterialPageRoute(

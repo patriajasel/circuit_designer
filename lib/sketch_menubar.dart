@@ -16,8 +16,13 @@ class MenuActions {
   List<DraggableFootprints>? footprints;
   List<Line>? lines;
   BuildContext context;
+  Function(String, String) sendPath;
 
-  MenuActions({this.footprints, this.lines, required this.context});
+  MenuActions(
+      {this.footprints,
+      this.lines,
+      required this.context,
+      required this.sendPath});
 
   Map<LogicalKeySet, Intent> buildShortcuts() {
     return {
@@ -55,7 +60,7 @@ class MenuActions {
               print('Open Design clicked');
               break;
             case 'save':
-              saveDesign(footprints!, lines!, context);
+              saveDesign(footprints!, lines!, context, sendPath);
               break;
             case 'cut':
               print('Cut clicked');
@@ -91,7 +96,8 @@ class MenuActions {
         _addMenuItem('Open Design', () => print('Open clicked'),
             shortcut: 'Ctrl + O'),
         const Divider(),
-        _addMenuItem('Save', () => saveDesign(footprints!, lines!, context),
+        _addMenuItem(
+            'Save', () => saveDesign(footprints!, lines!, context, sendPath),
             shortcut: 'Ctrl + S'),
         _addMenuItem('Save As', () => print('Exit clicked'),
             shortcut: 'Ctrl + S'),
@@ -349,7 +355,7 @@ class ActivateIntent extends Intent {
 }
 
 Future<void> saveDesign(List<DraggableFootprints> footprints, List<Line> lines,
-    BuildContext context) async {
+    BuildContext context, Function(String, String) sendPath) async {
   try {
     // Convert footprints and lines to JSON
     Map<String, dynamic> designData = {
@@ -382,8 +388,8 @@ Future<void> saveDesign(List<DraggableFootprints> footprints, List<Line> lines,
     }
 
     // Save the file with a timestamp for uniqueness
-    String timestamp = DateTime.now().toIso8601String().replaceAll(':', '-');
-    String filePath = '${projectFolder.path}/design-$timestamp.cc';
+    String filePath = '${projectFolder.path}/$randomFolderName-design.cc';
+    sendPath(projectFolder.path, randomFolderName);
 
     // Write the JSON data to the file
     File file = File(filePath);
