@@ -19,7 +19,9 @@ import 'dart:io';
 import 'data_footprints.dart';
 
 class Sketchboard extends StatefulWidget {
-  const Sketchboard({super.key});
+  final List<DraggableFootprints>? footprintsFromJson;
+  final List<Line>? linesFromJson;
+  const Sketchboard({super.key, this.footprintsFromJson, this.linesFromJson});
 
   @override
   State<Sketchboard> createState() => _SketchboardState();
@@ -73,6 +75,12 @@ class _SketchboardState extends State<Sketchboard> {
 
     loadJsonFiles();
     focusNode.requestFocus();
+
+    if (widget.footprintsFromJson!.isNotEmpty ||
+        widget.linesFromJson!.isNotEmpty) {
+      compToDisplay = widget.footprintsFromJson!;
+      lines = widget.linesFromJson!;
+    }
     super.initState();
   }
 
@@ -138,7 +146,8 @@ class _SketchboardState extends State<Sketchboard> {
 
   @override
   Widget build(BuildContext context) {
-    MenuActions menuActions = MenuActions();
+    MenuActions menuActions =
+        MenuActions(footprints: compToDisplay, lines: lines, context: context);
     Offset position = Offset(canvasWidthInPixels / 2, canvasHeightInPixels / 2);
 
     return Scaffold(

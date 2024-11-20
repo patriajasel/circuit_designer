@@ -12,6 +12,25 @@ class BoundingBox {
       required this.maxX,
       required this.maxY});
 
+  Map<String, dynamic> toJson() {
+    return {
+      'minX': minX,
+      'minY': minY,
+      'maxX': maxX,
+      'maxY': maxY,
+    };
+  }
+
+  // fromJson method to convert JSON map back to object
+  factory BoundingBox.fromJson(Map<String, dynamic> json) {
+    return BoundingBox(
+      minX: json['minX'],
+      minY: json['minY'],
+      maxX: json['maxX'],
+      maxY: json['maxY'],
+    );
+  }
+
   static BoundingBox calculate(Component component) {
     double minX = double.infinity;
     double minY = double.infinity;
@@ -79,6 +98,3 @@ class BoundingBox {
     return BoundingBox(minX: minX, minY: minY, maxX: maxX, maxY: maxY);
   }
 }
-
-
-

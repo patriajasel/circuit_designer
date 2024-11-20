@@ -1,9 +1,24 @@
 // ignore_for_file: avoid_print
 
+import 'dart:convert';
+import 'dart:io';
+import 'dart:math';
+
+import 'package:circuit_designer/draggable_footprints.dart';
+import 'package:circuit_designer/line_traces.dart';
+import 'package:circuit_designer/sketch_designer.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class MenuActions {
+  List<DraggableFootprints>? footprints;
+  List<Line>? lines;
+  BuildContext context;
+
+  MenuActions({this.footprints, this.lines, required this.context});
+
   Map<LogicalKeySet, Intent> buildShortcuts() {
     return {
       LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.keyN):
@@ -40,7 +55,7 @@ class MenuActions {
               print('Open Design clicked');
               break;
             case 'save':
-              print('Save clicked');
+              saveDesign(footprints!, lines!, context);
               break;
             case 'cut':
               print('Cut clicked');
@@ -76,7 +91,8 @@ class MenuActions {
         _addMenuItem('Open Design', () => print('Open clicked'),
             shortcut: 'Ctrl + O'),
         const Divider(),
-        _addMenuItem('Save', () => print('Save clicked'), shortcut: 'Ctrl + S'),
+        _addMenuItem('Save', () => saveDesign(footprints!, lines!, context),
+            shortcut: 'Ctrl + S'),
         _addMenuItem('Save As', () => print('Exit clicked'),
             shortcut: 'Ctrl + S'),
         const Divider(),
@@ -330,4 +346,154 @@ void canvasSettings(BuildContext context, Function(int, int) updateCanvasSize,
 class ActivateIntent extends Intent {
   const ActivateIntent(this.action);
   final String action;
+}
+
+Future<void> saveDesign(List<DraggableFootprints> footprints, List<Line> lines,
+    BuildContext context) async {
+  try {
+    // Convert footprints and lines to JSON
+    Map<String, dynamic> designData = {
+      'footprints': footprints.map((footprint) => footprint.toJson()).toList(),
+      'lines': lines.map((line) => line.toJson()).toList(),
+    };
+
+    // Serialize the combined JSON data
+    String jsonString = jsonEncode(designData);
+
+    // Determine the directory and file name
+    Directory? documentsDir = Directory(Platform.isWindows
+        ? "${Platform.environment['USERPROFILE']}\\Documents"
+        : "${Platform.environment['HOME']}/Documents");
+
+    Directory appFolder = Directory('${documentsDir.path}/CC-Projects');
+
+    // Create the CC-Projects folder if it doesn't exist
+    if (!appFolder.existsSync()) {
+      await appFolder.create(recursive: true);
+    }
+
+    // Generate a random folder name
+    String randomFolderName = 'Project-${_generateRandomString(8)}';
+    Directory projectFolder = Directory('${appFolder.path}/$randomFolderName');
+
+    // Create the project folder
+    if (!projectFolder.existsSync()) {
+      await projectFolder.create(recursive: true);
+    }
+
+    // Save the file with a timestamp for uniqueness
+    String timestamp = DateTime.now().toIso8601String().replaceAll(':', '-');
+    String filePath = '${projectFolder.path}/design-$timestamp.cc';
+
+    // Write the JSON data to the file
+    File file = File(filePath);
+    await file.writeAsString(jsonString);
+
+    // Show a dialog with a button to open the directory
+    _showOpenDirectoryDialog(context, projectFolder.path);
+  } catch (e) {
+    print('Error saving design: $e');
+  }
+}
+
+// Helper method to show the dialog
+void _showOpenDirectoryDialog(BuildContext context, String directoryPath) {
+  showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: const Text('Design Saved'),
+      content: const Text(
+          'Your design has been saved. Would you like to open the folder?'),
+      actions: [
+        TextButton(
+          onPressed: () {
+            _openDirectory(directoryPath);
+            Navigator.of(context).pop(); // Close the dialog
+          },
+          child: const Text('Open Directory'),
+        ),
+        TextButton(
+          onPressed: () {
+            Navigator.of(context).pop(); // Close the dialog
+          },
+          child: const Text('Cancel'),
+        ),
+      ],
+    ),
+  );
+}
+
+// Helper method to open the directory
+void _openDirectory(String directoryPath) async {
+  Uri directoryUri = Uri.directory(directoryPath);
+  if (await canLaunchUrl(directoryUri)) {
+    await launchUrl(directoryUri);
+  } else {
+    print("Could not open folder.");
+  }
+}
+
+// Helper method to generate a random string
+String _generateRandomString(int length) {
+  const characters =
+      'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  Random random = Random();
+  return String.fromCharCodes(
+    Iterable.generate(
+      length,
+      (_) => characters.codeUnitAt(random.nextInt(characters.length)),
+    ),
+  );
+}
+
+// Example of how to pick a file and parse the .cc design file.
+Future<void> importDesign(BuildContext context) async {
+  try {
+    // Open the file picker dialog to select .cc files
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      type: FileType.custom, // Custom file type to filter extensions
+      allowedExtensions: ['cc'], // Allow only .cc files
+    );
+
+    // If no file is selected, return
+    if (result == null) {
+      print('No file selected.');
+      return;
+    }
+
+    // Get the selected file's path
+    String filePath = result.files.single.path!;
+    print('Selected file: $filePath');
+
+    // Open the file and read its content
+    File file = File(filePath);
+    String fileContent = await file.readAsString();
+
+    // Decode the JSON data from the file
+    Map<String, dynamic> designData = jsonDecode(fileContent);
+
+    // Extract footprints and lines from the decoded JSON
+    List<dynamic> footprintsJson = designData['footprints'];
+    List<dynamic> linesJson = designData['lines'];
+
+    // Parse the footprints and lines into your models
+    List<DraggableFootprints> footprints = footprintsJson
+        .map((footprintJson) => DraggableFootprints.fromJson(footprintJson))
+        .toList();
+
+    List<Line> lines =
+        linesJson.map((lineJson) => Line.fromJson(lineJson)).toList();
+
+    // Now you can use the `footprints` and `lines` lists as needed
+    print('Loaded ${footprints.length} footprints and ${lines.length} lines.');
+
+    // Handle your parsed data (display, edit, etc.)
+    Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (builder) => Sketchboard(
+                linesFromJson: lines, footprintsFromJson: footprints)));
+  } catch (e) {
+    print('Error reading or parsing file: $e');
+  }
 }

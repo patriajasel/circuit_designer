@@ -1,3 +1,4 @@
+import 'package:circuit_designer/sketch_menubar.dart';
 import 'package:flutter/material.dart';
 
 class StartPage extends StatefulWidget {
@@ -55,11 +56,14 @@ class _StartPageState extends State<StartPage> {
                         child: Column(
                           children: [
                             _sideMenuOptions("Create PCB Design",
-                                Icons.polyline_rounded, "/Sketch"),
+                                Icons.polyline_rounded, "/Sketch", false),
                             _sideMenuOptions("Open Existing Design",
-                                Icons.folder_open, "/Sketch"),
-                            _sideMenuOptions("CNC Controls",
-                                Icons.settings_remote_rounded, "/Controls"),
+                                Icons.folder_open, "/Sketch", true),
+                            _sideMenuOptions(
+                                "CNC Controls",
+                                Icons.settings_remote_rounded,
+                                "/Controls",
+                                false),
                           ],
                         ),
                       ),
@@ -69,9 +73,9 @@ class _StartPageState extends State<StartPage> {
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: [
                             _sideMenuOptions("User Manual",
-                                Icons.menu_book_rounded, "/Sketch"),
+                                Icons.menu_book_rounded, "/Sketch", false),
                             _sideMenuOptions("About Us",
-                                Icons.info_outline_rounded, "/Sketch")
+                                Icons.info_outline_rounded, "/Sketch", false)
                           ],
                         ),
                       )
@@ -133,7 +137,7 @@ class _StartPageState extends State<StartPage> {
 
   //  This is the method for generating Text Navigation buttons.
   MouseRegion _sideMenuOptions(
-      String optionsName, IconData icon, String routeName) {
+      String optionsName, IconData icon, String routeName, bool isImport) {
     final hoverNotifier = ValueNotifier<bool>(false);
 
     return MouseRegion(
@@ -152,8 +156,12 @@ class _StartPageState extends State<StartPage> {
                   hover ? Colors.lightGreenAccent.shade700 : Colors.transparent,
             ),
             child: TextButton(
-              onPressed: () {
-                _navigator(routeName);
+              onPressed: () async {
+                if (isImport) {
+                  await importDesign(context);
+                } else {
+                  _navigator(routeName);
+                }
               },
               child: Row(
                 children: [

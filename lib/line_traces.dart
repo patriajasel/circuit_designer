@@ -23,6 +23,33 @@ class Line {
       required this.thickness,
       required this.startConnected,
       required this.endConnected});
+
+  Map<String, dynamic> toJson() => {
+        'name': name,
+        'start': {'dx': start.dx, 'dy': start.dy},
+        'end': {'dx': end.dx, 'dy': end.dy},
+        'isSelected': isSelected,
+        'isHovered': isHovered,
+        'thickness': thickness,
+        'startConnected': startConnected,
+        'endConnected': endConnected,
+        'moveStart': moveStart,
+      };
+
+  // fromJson for Line
+  factory Line.fromJson(Map<String, dynamic> json) {
+    return Line(
+      name: json['name'],
+      start: Offset(json['start']['dx'], json['start']['dy']),
+      end: Offset(json['end']['dx'], json['end']['dy']),
+      isSelected: json['isSelected'],
+      isHovered: json['isHovered'],
+      thickness: json['thickness'],
+      startConnected: json['startConnected'],
+      endConnected: json['endConnected'],
+      moveStart: json['moveStart'],
+    );
+  }
 }
 
 class GCodeLines {

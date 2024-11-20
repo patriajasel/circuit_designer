@@ -21,6 +21,18 @@ class Component {
       required this.rectangle,
       this.polygon});
 
+  Map<String, dynamic> toJson() => {
+        'name': name,
+        'text': text.map((e) => e.toJson()).toList(),
+        'wires': wire.map((e) => e.toJson()).toList(),
+        'pads': pad.map((e) => e.toJson()).toList(),
+        'smd': smd.map((e) => e.toJson()).toList(),
+        'holes': hole.map((e) => e.toJson()).toList(),
+        'circles': circle.map((e) => e.toJson()).toList(),
+        'rectangles': rectangle.map((e) => e.toJson()).toList(),
+        'polygon': polygon?.toJson(),
+      };
+
   factory Component.fromJson(Map<String, dynamic> json) {
     return Component(
       name: json['name'] ?? '',
@@ -79,6 +91,14 @@ class TextElement {
       required this.layer,
       required this.text});
 
+  Map<String, dynamic> toJson() => {
+        'x': x,
+        'y': y,
+        'size': size,
+        'layer': layer,
+        'text': text,
+      };
+
   factory TextElement.fromJson(Map<String, dynamic> json) {
     return TextElement(
       x: json['x'].toDouble(),
@@ -107,6 +127,15 @@ class Wire {
       required this.width,
       required this.layer});
 
+  Map<String, dynamic> toJson() => {
+        'x1': x1,
+        'y1': y1,
+        'x2': x2,
+        'y2': y2,
+        'width': width,
+        'layer': layer,
+      };
+
   factory Wire.fromJson(Map<String, dynamic> json) {
     return Wire(
       x1: json['x1'].toDouble(),
@@ -133,6 +162,14 @@ class Pad {
       required this.y,
       required this.drill,
       this.shape});
+
+  Map<String, dynamic> toJson() => {
+        'name': name,
+        'x': x,
+        'y': y,
+        'drill': drill,
+        'shape': shape,
+      };
 
   factory Pad.fromJson(Map<String, dynamic> json) {
     return Pad(
@@ -162,6 +199,14 @@ class Smd {
       required this.dy,
       required this.layer});
 
+  Map<String, dynamic> toJson() => {
+        'x': x,
+        'y': y,
+        'dx': dx,
+        'dy': dy,
+        'layer': layer,
+      };
+
   factory Smd.fromJson(Map<String, dynamic> json) {
     return Smd(
         name: json['name'],
@@ -184,6 +229,12 @@ class Hole {
     required this.y,
     required this.drill,
   });
+
+  Map<String, dynamic> toJson() => {
+        'x': x,
+        'y': y,
+        'drill': drill,
+      };
 
   factory Hole.fromJson(Map<String, dynamic> json) {
     return Hole(
@@ -208,6 +259,14 @@ class Circle {
       required this.radius,
       required this.width,
       required this.layer});
+
+  Map<String, dynamic> toJson() => {
+        'x': x,
+        'y': y,
+        'radius': radius,
+        'width': width,
+        'layer': layer,
+      };
 
   factory Circle.fromJson(Map<String, dynamic> json) {
     return Circle(
@@ -235,6 +294,14 @@ class Rectangle {
       required this.y2,
       required this.layer});
 
+  Map<String, dynamic> toJson() => {
+        'x1': x1,
+        'y1': y1,
+        'x2': x2,
+        'y2': y2,
+        'layer': layer,
+      };
+
   factory Rectangle.fromJson(Map<String, dynamic> json) {
     return Rectangle(
       x1: json['x1'].toDouble(),
@@ -253,6 +320,12 @@ class Polygon {
   final double layer;
 
   Polygon({required this.vertices, required this.width, required this.layer});
+
+  Map<String, dynamic> toJson() => {
+        'vertices': vertices,
+        'width': width,
+        'layer': layer,
+      };
 
   factory Polygon.fromJson(Map<String, dynamic> json) {
     return Polygon(
@@ -273,6 +346,12 @@ class Vertex {
 
   Vertex({required this.x, required this.y, this.curve});
 
+  Map<String, dynamic> toJson() => {
+        'x': x,
+        'y': y,
+        'curve': curve,
+      };
+
   factory Vertex.fromJson(Map<String, dynamic> json) {
     return Vertex(
       x: json['x'].toDouble(),
@@ -288,6 +367,11 @@ class Package {
   final List<Component> components;
 
   Package({required this.packageType, required this.components});
+
+  Map<String, dynamic> toJson() => {
+        'packageType': packageType,
+        'components': components.map((e) => e.toJson()).toList(),
+      };
 
   factory Package.fromJson(Map<String, dynamic> json) {
     return Package(
