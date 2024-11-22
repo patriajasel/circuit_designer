@@ -477,7 +477,7 @@ class _SketchboardState extends State<Sketchboard> {
                                         smdOutline: smdOutlines!,
                                         arcs: arcsOutlines!);
 
-                                    List<String> gCodes = GCodeConverter()
+                                    await GCodeConverter()
                                         .convertOutlineToGCode(
                                             List.from(allOutlines.arcs),
                                             List.from(
@@ -487,16 +487,19 @@ class _SketchboardState extends State<Sketchboard> {
                                             filePath!,
                                             fileName!);
 
-                                    GCodeConverter().arcHoleToGCode(
+                                    await GCodeConverter().arcHoleToGCode(
                                         List.from(allOutlines.arcs),
                                         scale,
                                         filePath!,
                                         fileName!);
 
+                                    List<File> gCodeFiles = GCodeConverter()
+                                        .getGCodeFiles("$filePath/GCode/");
+
                                     Navigator.of(context)
                                         .push(MaterialPageRoute(
                                             builder: (context) => CncControls(
-                                                  gCodeCommands: gCodes,
+                                                  gCodeFiles: gCodeFiles,
                                                   designOutlines: allOutlines,
                                                   scale: scale,
                                                   canvasHeight:

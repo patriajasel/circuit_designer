@@ -20,13 +20,13 @@ class GCodeConverter {
   List<int> arcsToRemove = [];
   double? currentRadius;
 
-  List<String> convertOutlineToGCode(
+  Future<void> convertOutlineToGCode(
       List<Arc> arcs,
       List<ConnectingLines> outlines,
       List<GCodeLines> smdGCodes,
       double scale,
       String filePath,
-      String fileName) {
+      String fileName) async {
     // Prepare gCodeLines based on outlines
     for (var outline in outlines) {
       disperseOutLines(outline);
@@ -41,15 +41,15 @@ class GCodeConverter {
       if (i == 0) {
         gCodeCommands.add(gCode("millimeters"));
         gCodeCommands.add(gCode("absolute"));
-        gCodeCommands.add("G0 Z10;");
+        gCodeCommands.add("G0 Z10 F1000;");
         gCodeCommands.add(gCode("home"));
       }
 
       gCodeCommands.add("G0 Z10 F1000;");
-      gCodeCommands
-          .add("${gCode("move")} X${firstOffset.dx} Y${firstOffset.dy}");
+      gCodeCommands.add(
+          "${gCode("move")} X${(firstOffset.dx * 100).round() / 100} Y${(firstOffset.dy * 100).round() / 100} F1000");
       gCodeCommands.add("M3;");
-      gCodeCommands.add("G0 Z-0.398 F400;");
+      gCodeCommands.add("G0 Z-0.1 F100;");
 
       currentOffset = outlines[i].connectingLines.first.leftStartPoint / scale;
       do {
@@ -61,12 +61,12 @@ class GCodeConverter {
           if (isPad == true && isLine == false) {
             arcs.removeAt(indexToRemove!);
             gCodeCommands.add(
-                "${gCode("arcCW")} X${newOffset.dx} Y${newOffset.dy} I$cwI J$cwJ");
+                "${gCode("arcCW")} X${(newOffset.dx * 100).round() / 100} Y${(newOffset.dy * 100).round() / 100} I$cwI J$cwJ");
             currentOffset = newOffset;
           } else if (isLine == true && isPad == false) {
             gCodeLines.removeAt(indexToRemove!);
-            gCodeCommands
-                .add("${gCode("engrave")} X${newOffset.dx} Y${newOffset.dy}");
+            gCodeCommands.add(
+                "${gCode("engrave")} X${(newOffset.dx * 100).round() / 100} Y${(newOffset.dy * 100).round() / 100}");
             currentOffset = newOffset;
           }
         } else {
@@ -78,23 +78,20 @@ class GCodeConverter {
       } while (currentOffset != firstOffset);
     }
 
-    gCodeCommands.add("G0 Z10;");
+    gCodeCommands.add("G0 Z10 F1000;");
 
     gCodeCommands.add("M5"); // Stop spindle
     gCodeCommands.add("M30"); // End of program
 
-    saveGcodeFile(
+    await saveGcodeFile(
       filePath,
-      "$fileName-engrave",
+      "$fileName-carve",
       gCodeCommands,
     );
-    return gCodeCommands;
-
-    // Finalize GCode commands
   }
 
-  void arcHoleToGCode(
-      List<Arc> arcs, double scale, String filePath, String fileName) {
+  Future<void> arcHoleToGCode(
+      List<Arc> arcs, double scale, String filePath, String fileName) async {
     print("Creating Drill codes");
     Set<double> drillSizes = {};
 
@@ -118,11 +115,11 @@ class GCodeConverter {
         if (uniqueDrillSizes[i] == (arc.radius / scale) / 2) {
           gCodeCommands.add("G0 Z5");
           gCodeCommands.add(
-              '${gCode("move")} X${arc.centerPoint.dx / scale} Y${arc.centerPoint.dy / scale} F1000');
+              '${gCode("move")} X${((arc.centerPoint.dx / scale) * 100).round() / 100} Y${((arc.centerPoint.dy / scale) * 100).round() / 100} F1000');
 
           gCodeCommands.add("G0 Z5");
           gCodeCommands.add("M3;");
-          gCodeCommands.add("G1 Z-1.2 F300");
+          gCodeCommands.add("G1 Z-1.2 F100");
         }
       }
 
@@ -132,7 +129,7 @@ class GCodeConverter {
       gCodeCommands.add("M30");
 
       // save file inside here
-      saveGcodeFile(filePath, "$fileName-drill($i)", gCodeCommands);
+      await saveGcodeFile(filePath, "$fileName-drill($i)", gCodeCommands);
     }
   }
 
@@ -282,22 +279,17 @@ class GCodeConverter {
       print("Error saving file: $e");
     }
   }
+
+  List<File> getGCodeFiles(String folderPath) {
+    final directory = Directory(folderPath);
+
+    List<FileSystemEntity> entities = directory.listSync();
+
+    List<File> files = entities
+        .whereType<File>()
+        .where((file) => file.path.endsWith('.gcode'))
+        .toList();
+
+    return files;
+  }
 }
-
-// Debugging: Print lines and pads
-/* for (var line in gCodeLines) {
-      print("line #${gCodeLines.indexOf(line)}");
-      print("GCode StartPoint: ${line.startOffset / scale}");
-      print("GCode EndPoint: ${line.endOffset / scale}");
-    }
-
-    for (var arc in arcs) {
-      print("pad #${arcs.indexOf(arc)}");
-      print("Arc StartPoint: ${arc.startPoint / scale}");
-      print("Arc EndPoint: ${arc.endPoint / scale}");
-    } */
-
-/*for (var gCodes in smdGCodes) {
-      print(gCodes.startOffset);
-      print(gCodes.endOffset);
-    } */

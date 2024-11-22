@@ -1,6 +1,7 @@
 // ignore_for_file: avoid_print
 
 import 'dart:async';
+import 'dart:io';
 
 import 'package:circuit_designer/cnc_controls_outline_painter.dart';
 import 'package:circuit_designer/outline_carve.dart';
@@ -12,6 +13,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:window_manager/window_manager.dart';
 
 class CncControls extends StatefulWidget {
+  final List<File>? gCodeFiles;
   final List<String>? gCodeCommands;
   final OverallOutline? designOutlines;
   final double? scale;
@@ -19,6 +21,7 @@ class CncControls extends StatefulWidget {
   final double? canvasHeight;
   const CncControls(
       {super.key,
+      this.gCodeFiles,
       this.gCodeCommands,
       this.designOutlines,
       this.scale,
@@ -30,16 +33,6 @@ class CncControls extends StatefulWidget {
 }
 
 class _CncControlsState extends State<CncControls> {
-  @override
-  void initState() {
-    WindowManager.instance.maximize();
-    WindowManager.instance.setMaximizable(true);
-
-    _listAvailablePorts();
-
-    super.initState();
-  }
-
   TextEditingController feedRateController = TextEditingController(text: '500');
   TextEditingController gCodeController = TextEditingController();
   TextEditingController textFieldController = TextEditingController();
@@ -49,9 +42,12 @@ class _CncControlsState extends State<CncControls> {
   TextEditingController stepSizeZ = TextEditingController(text: "1");
 
   List<String> textsToDisplay = [];
+  List<List<String>> gCodeLinesToDisplay = [];
+  List<List<String>> gCodeLinesToSend = [];
 
   bool isSpindleOn = false;
   bool isConnected = false;
+  bool isPaused = false;
 
   String portStatus = "Disconnected";
   String? portName;
@@ -68,6 +64,43 @@ class _CncControlsState extends State<CncControls> {
   double zValue = 0;
 
   double defaultFeedRate = 500.0;
+
+  @override
+  void initState() {
+    WindowManager.instance.maximize();
+    WindowManager.instance.setMaximizable(true);
+
+    _listAvailablePorts();
+
+    if (widget.gCodeFiles != null) {
+      for (var file in widget.gCodeFiles!) {
+        parseGCodeFiles(file);
+      }
+    }
+
+    super.initState();
+  }
+
+  void parseGCodeFiles(File gcodeFile) async {
+    try {
+      final List<String> gCodeFromFile = await gcodeFile.readAsLines();
+
+      final List<String> parsedLines = gCodeFromFile
+          .map((line) {
+            final cleanLine = line.split(";").first.trim();
+            return cleanLine.isNotEmpty ? cleanLine : null;
+          })
+          .whereType<String>()
+          .toList();
+
+      setState(() {
+        gCodeLinesToDisplay.add(parsedLines);
+        gCodeLinesToSend.add(parsedLines);
+      });
+    } catch (e) {
+      print('Error parsing GCode: $e');
+    }
+  }
 
   // Method to list available ports
   void _listAvailablePorts() {
@@ -113,10 +146,9 @@ class _CncControlsState extends State<CncControls> {
         reader = SerialPortReader(selectedPort!);
 
         _subscription = reader!.stream.listen((data) {
-          print('Raw data received: $data'); // Debugging log for raw data
+          print('Raw data received: $data');
           final response = String.fromCharCodes(data);
-          print(
-              'Converted response: $response'); // Debugging log for converted data
+          print('Converted response: $response');
 
           // Append new data to the buffer
           responseBuffer.write(response);
@@ -137,6 +169,9 @@ class _CncControlsState extends State<CncControls> {
         }, onDone: () {
           print("Stream is done.");
         });
+
+        // Send G-code commands after confirming GRBL is ready
+        await _initializeGRBL();
       } else {
         print('Failed to open port $portName');
       }
@@ -157,6 +192,103 @@ class _CncControlsState extends State<CncControls> {
       }
     } else {
       print('No port connected');
+    }
+  }
+
+  void sendCommandLines(
+      List<List<String>> gCodeLines, BuildContext context) async {
+    for (int i = 0; i < gCodeLines.length; i++) {
+      for (int j = 0; j < gCodeLines[i].length; j++) {
+        bool check = await validateCommand(gCodeLines[i][j]);
+        if (check == true) {
+          _sendGCode(gCodeLines[i][j]);
+          await Future.delayed(const Duration(seconds: 2));
+          setState(() {
+            textsToDisplay.insert(0, gCodeLines[i][j]);
+          });
+        } else {
+          _sendGCode("G0 X0 Y0 Z50");
+          _sendGCode("M30");
+          int indexI = i;
+          int indexJ = j + 1;
+          String string2 = gCodeLines[indexI][indexJ];
+
+          promptUser(context, string2);
+
+          setState(() {
+            textsToDisplay.insert(0, "-> Stopping Process");
+            removeGCodes(indexI, indexJ);
+          });
+
+          return;
+        }
+      }
+    }
+  }
+
+  void promptUser(BuildContext context, String string) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Change Drill bit Size'),
+          content: Text(
+            'Please change the drill bit sizes to $string mm and set the home axis again',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Okay'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void removeGCodes(int indexI, int indexJ) {
+    setState(() {
+      // Remove all elements in lines before indexI
+      for (int i = 0; i < indexI; i++) {
+        gCodeLinesToSend.removeAt(0);
+      }
+
+      // Now remove elements up to indexJ in the first line (previously at indexI)
+      if (gCodeLinesToSend.isNotEmpty && indexJ < gCodeLinesToSend[0].length) {
+        for (int j = 0; j <= indexJ; j++) {
+          gCodeLinesToSend[0].removeAt(0);
+        }
+      }
+
+      // Remove the line if it's empty after element removal
+      if (gCodeLinesToSend.isNotEmpty && gCodeLinesToSend[0].isEmpty) {
+        gCodeLinesToSend.removeAt(0);
+      }
+    });
+  }
+
+  Future<bool> validateCommand(String command) async {
+    if (command == "(Drilling)") {
+      return false;
+    } else {
+      return true;
+    }
+  }
+
+  // Initialize GRBL and set zeroth position
+  Future<void> _initializeGRBL() async {
+    try {
+      textsToDisplay.insert(0, "Initializing GRBL...");
+      _sendGCode("\$X"); // Unlock GRBL (if locked)
+      await Future.delayed(const Duration(milliseconds: 500));
+      _sendGCode("G10 L20 P1 X0 Y0 Z0"); // Set zeroth position
+      textsToDisplay.insert(0, "GRBL initialized and position set to zero.");
+
+      setState(() {});
+    } catch (e) {
+      print('Error initializing GRBL: $e');
     }
   }
 
@@ -308,6 +440,7 @@ class _CncControlsState extends State<CncControls> {
                                     backgroundColor: Colors.blueGrey.shade600),
                                 onPressed: () {
                                   _listAvailablePorts();
+                                  setState(() {});
                                 },
                                 child: const Text(
                                   "Refresh",
@@ -487,13 +620,28 @@ class _CncControlsState extends State<CncControls> {
                                       backgroundColor: Colors.blueGrey.shade600,
                                       shape: const CircleBorder(),
                                       padding: const EdgeInsets.all(20.0)),
-                                  onPressed: () {
-                                    // For sending all the gCode commands to grbl
+                                  onPressed: () async {
+                                    if (isPaused == true) {
+                                      setState(() {
+                                        textsToDisplay.insert(0, "Resumed");
+                                        isPaused = false;
+                                      });
+                                      _sendGCode("~");
+                                    } else {
+                                      sendCommandLines(
+                                          gCodeLinesToSend, context);
+                                    }
                                   },
                                   child: const Icon(Icons.play_arrow,
                                       color: Colors.white)),
                               ElevatedButton(
-                                  onPressed: () {},
+                                  onPressed: () {
+                                    setState(() {
+                                      textsToDisplay.insert(0, "Paused");
+                                      isPaused = true;
+                                    });
+                                    _sendGCode("!");
+                                  },
                                   style: ElevatedButton.styleFrom(
                                       backgroundColor: Colors.blueGrey.shade600,
                                       shape: const CircleBorder(),
@@ -502,7 +650,7 @@ class _CncControlsState extends State<CncControls> {
                                       color: Colors.white)),
                               ElevatedButton(
                                   onPressed: () {
-                                    _sendGCode("!");
+                                    _sendGCode("M30");
                                   },
                                   style: ElevatedButton.styleFrom(
                                       backgroundColor: Colors.blueGrey.shade600,
@@ -605,10 +753,6 @@ class _CncControlsState extends State<CncControls> {
                                                         horizontal: 20.0,
                                                         vertical: 10),
                                                     child: TextField(
-                                                      inputFormatters: [
-                                                        FilteringTextInputFormatter
-                                                            .digitsOnly
-                                                      ],
                                                       controller: stepSizeX,
                                                       decoration:
                                                           const InputDecoration(
@@ -625,10 +769,6 @@ class _CncControlsState extends State<CncControls> {
                                                         horizontal: 20.0,
                                                         vertical: 10),
                                                     child: TextField(
-                                                      inputFormatters: [
-                                                        FilteringTextInputFormatter
-                                                            .digitsOnly
-                                                      ],
                                                       controller: stepSizeY,
                                                       decoration:
                                                           const InputDecoration(
@@ -645,10 +785,6 @@ class _CncControlsState extends State<CncControls> {
                                                         horizontal: 20.0,
                                                         vertical: 10),
                                                     child: TextField(
-                                                      inputFormatters: [
-                                                        FilteringTextInputFormatter
-                                                            .digitsOnly
-                                                      ],
                                                       controller: stepSizeZ,
                                                       decoration:
                                                           const InputDecoration(
@@ -1105,20 +1241,36 @@ class _CncControlsState extends State<CncControls> {
                                 borderRadius: BorderRadius.circular(10),
                                 color: Colors.white,
                               ),
-                              child: widget.gCodeCommands == null
-                                  ? const Center(
-                                      child: Text(
-                                          "No commands available")) // Optional: Display a message when null
-                                  : ListView.builder(
-                                      itemCount: widget.gCodeCommands!.length,
-                                      reverse: false,
-                                      itemBuilder: (context, index) {
-                                        return ListTile(
-                                          title: Text(
-                                              widget.gCodeCommands![index]),
-                                        );
-                                      },
+                              child: ListView.separated(
+                                itemCount: gCodeLinesToDisplay.length,
+                                separatorBuilder: (context, index) =>
+                                    const Divider(
+                                        color: Colors.grey, thickness: 1),
+                                itemBuilder: (context, index) {
+                                  int reversedIndex =
+                                      gCodeLinesToDisplay.length - 1 - index;
+
+                                  List<String> subList =
+                                      gCodeLinesToDisplay[reversedIndex];
+
+                                  return Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 8.0, horizontal: 16.0),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: subList
+                                          .map((item) => Text(
+                                                item,
+                                                style: const TextStyle(
+                                                    fontSize:
+                                                        16), // Customize text style
+                                              ))
+                                          .toList(),
                                     ),
+                                  );
+                                },
+                              ),
                             ),
                           ),
                         ),
