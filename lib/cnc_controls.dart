@@ -349,6 +349,9 @@ class _CncControlsState extends State<CncControls> {
 
   @override
   Widget build(BuildContext context) {
+    final double screenHeight = MediaQuery.of(context).size.height;
+    final double screenWidth = MediaQuery.of(context).size.width;
+
     return Scaffold(
       backgroundColor: Colors.grey.shade900,
       body: Row(
@@ -360,7 +363,7 @@ class _CncControlsState extends State<CncControls> {
               Expanded(
                 flex: 3,
                 child: SizedBox(
-                  width: 400,
+                  width: screenWidth * 0.21,
                   child: Card(
                     color: Colors.blueGrey.shade800,
                     elevation: 10.0,
@@ -370,8 +373,12 @@ class _CncControlsState extends State<CncControls> {
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
                         Container(
-                          margin: const EdgeInsets.all(10),
-                          padding: const EdgeInsets.all(5.0),
+                          margin: EdgeInsets.symmetric(
+                              horizontal: screenWidth * 0.005,
+                              vertical: screenHeight * 0.015),
+                          padding: EdgeInsets.symmetric(
+                              horizontal: screenWidth * 0.0025,
+                              vertical: screenHeight * 0.0075),
                           decoration: BoxDecoration(
                               color: isConnected
                                   ? Colors.lightGreenAccent.shade700
@@ -449,9 +456,12 @@ class _CncControlsState extends State<CncControls> {
                           ],
                         ), // Space between label and dropdown
                         Padding(
-                          padding: const EdgeInsets.all(10.0),
+                          padding: EdgeInsets.symmetric(
+                              horizontal: screenWidth * 0.005,
+                              vertical: screenHeight * 0.015),
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 15),
+                            padding: EdgeInsets.symmetric(
+                                horizontal: screenWidth * 0.0075),
                             decoration: BoxDecoration(
                               color: Colors.blueGrey
                                   .shade600, // Set the background to white
@@ -490,8 +500,9 @@ class _CncControlsState extends State<CncControls> {
                                 return DropdownMenuItem<String>(
                                   value: value,
                                   child: Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                        vertical: 10, horizontal: 8),
+                                    padding: EdgeInsets.symmetric(
+                                        horizontal: screenWidth * 0.005,
+                                        vertical: screenHeight * 0.015),
                                     child: Text(
                                       value,
                                       style: const TextStyle(
@@ -507,9 +518,14 @@ class _CncControlsState extends State<CncControls> {
                         ),
 
                         Container(
-                          padding: const EdgeInsets.all(10),
-                          margin: const EdgeInsets.only(
-                              top: 30.0, bottom: 10, left: 30, right: 30),
+                          padding: EdgeInsets.symmetric(
+                              horizontal: screenWidth * 0.005,
+                              vertical: screenHeight * 0.015),
+                          margin: EdgeInsets.only(
+                              top: screenHeight * 0.01,
+                              bottom: screenHeight * 0.01,
+                              left: screenWidth * 0.015,
+                              right: screenWidth * 0.015),
                           decoration: BoxDecoration(
                               border:
                                   Border.all(width: 2, color: Colors.white)),
@@ -530,9 +546,14 @@ class _CncControlsState extends State<CncControls> {
                           ),
                         ),
                         Container(
-                          padding: const EdgeInsets.all(10),
-                          margin: const EdgeInsets.symmetric(
-                              horizontal: 30.0, vertical: 10),
+                          padding: EdgeInsets.symmetric(
+                              horizontal: screenWidth * 0.005,
+                              vertical: screenHeight * 0.015),
+                          margin: EdgeInsets.only(
+                              top: screenHeight * 0.01,
+                              bottom: screenHeight * 0.01,
+                              left: screenWidth * 0.015,
+                              right: screenWidth * 0.015),
                           decoration: BoxDecoration(
                               border:
                                   Border.all(width: 2, color: Colors.white)),
@@ -553,9 +574,14 @@ class _CncControlsState extends State<CncControls> {
                           ),
                         ),
                         Container(
-                          padding: const EdgeInsets.all(10),
-                          margin: const EdgeInsets.symmetric(
-                              horizontal: 30.0, vertical: 10),
+                          padding: EdgeInsets.symmetric(
+                              horizontal: screenWidth * 0.005,
+                              vertical: screenHeight * 0.015),
+                          margin: EdgeInsets.only(
+                              top: screenHeight * 0.01,
+                              bottom: screenHeight * 0.01,
+                              left: screenWidth * 0.015,
+                              right: screenWidth * 0.015),
                           decoration: BoxDecoration(
                               border:
                                   Border.all(width: 2, color: Colors.white)),
@@ -577,8 +603,9 @@ class _CncControlsState extends State<CncControls> {
                         ),
 
                         Padding(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 50.0, vertical: 10),
+                          padding: EdgeInsets.symmetric(
+                              horizontal: screenWidth * 0.02,
+                              vertical: screenHeight * 0.01),
                           child: TextField(
                             inputFormatters: [
                               FilteringTextInputFormatter.digitsOnly
@@ -611,7 +638,7 @@ class _CncControlsState extends State<CncControls> {
                         ),
 
                         Container(
-                          margin: const EdgeInsets.only(top: 60),
+                          margin: EdgeInsets.only(top: screenHeight * 0.04),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceAround,
                             children: [
@@ -619,7 +646,9 @@ class _CncControlsState extends State<CncControls> {
                                   style: ElevatedButton.styleFrom(
                                       backgroundColor: Colors.blueGrey.shade600,
                                       shape: const CircleBorder(),
-                                      padding: const EdgeInsets.all(20.0)),
+                                      padding: EdgeInsets.symmetric(
+                                          horizontal: screenWidth * 0.005,
+                                          vertical: screenHeight * 0.02)),
                                   onPressed: () async {
                                     if (isPaused == true) {
                                       setState(() {
@@ -645,7 +674,9 @@ class _CncControlsState extends State<CncControls> {
                                   style: ElevatedButton.styleFrom(
                                       backgroundColor: Colors.blueGrey.shade600,
                                       shape: const CircleBorder(),
-                                      padding: const EdgeInsets.all(20.0)),
+                                      padding: EdgeInsets.symmetric(
+                                          horizontal: screenWidth * 0.005,
+                                          vertical: screenHeight * 0.02)),
                                   child: const Icon(Icons.pause,
                                       color: Colors.white)),
                               ElevatedButton(
@@ -655,7 +686,9 @@ class _CncControlsState extends State<CncControls> {
                                   style: ElevatedButton.styleFrom(
                                       backgroundColor: Colors.blueGrey.shade600,
                                       shape: const CircleBorder(),
-                                      padding: const EdgeInsets.all(20.0)),
+                                      padding: EdgeInsets.symmetric(
+                                          horizontal: screenWidth * 0.005,
+                                          vertical: screenHeight * 0.02)),
                                   child: const Icon(Icons.stop,
                                       color: Colors.white)),
                               ElevatedButton(
@@ -672,7 +705,9 @@ class _CncControlsState extends State<CncControls> {
                                   style: ElevatedButton.styleFrom(
                                       backgroundColor: Colors.blueGrey.shade600,
                                       shape: const CircleBorder(),
-                                      padding: const EdgeInsets.all(20.0)),
+                                      padding: EdgeInsets.symmetric(
+                                          horizontal: screenWidth * 0.005,
+                                          vertical: screenHeight * 0.02)),
                                   child: const Icon(Icons.restart_alt,
                                       color: Colors.white))
                             ],
@@ -687,7 +722,7 @@ class _CncControlsState extends State<CncControls> {
               Expanded(
                 flex: 2,
                 child: SizedBox(
-                  width: 400,
+                  width: screenWidth * 0.21,
                   child: Card(
                     color: Colors.blueGrey.shade800,
                     elevation: 10.0,
@@ -698,12 +733,14 @@ class _CncControlsState extends State<CncControls> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceAround,
                           children: [
-                            const SizedBox(
-                              width: 20,
+                            SizedBox(
+                              width: screenWidth * 0.01,
                             ),
-                            const Padding(
-                              padding: EdgeInsets.all(5.0),
-                              child: Text(
+                            Padding(
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: screenWidth * 0.0025,
+                                  vertical: screenHeight * 0.001),
+                              child: const Text(
                                 "Manual Controls",
                                 style: TextStyle(
                                     fontWeight: FontWeight.bold,
@@ -712,8 +749,9 @@ class _CncControlsState extends State<CncControls> {
                               ),
                             ),
                             Padding(
-                              padding:
-                                  const EdgeInsets.only(top: 10.0, left: 10),
+                              padding: EdgeInsets.only(
+                                  top: screenWidth * 0.01,
+                                  left: screenWidth * 0.01),
                               child: IconButton(
                                   onPressed: () {
                                     showDialog(
@@ -724,8 +762,8 @@ class _CncControlsState extends State<CncControls> {
                                                 borderRadius:
                                                     BorderRadius.circular(5)),
                                             child: Container(
-                                              height: 350,
-                                              width: 400,
+                                              height: screenHeight * 0.35,
+                                              width: screenWidth * 0.2,
                                               decoration: BoxDecoration(
                                                   borderRadius:
                                                       BorderRadius.circular(
@@ -736,10 +774,16 @@ class _CncControlsState extends State<CncControls> {
                                                 crossAxisAlignment:
                                                     CrossAxisAlignment.center,
                                                 children: [
-                                                  const Padding(
+                                                  Padding(
                                                     padding:
-                                                        EdgeInsets.all(20.0),
-                                                    child: Text(
+                                                        EdgeInsets.symmetric(
+                                                            horizontal:
+                                                                screenWidth *
+                                                                    0.01,
+                                                            vertical:
+                                                                screenHeight *
+                                                                    0.03),
+                                                    child: const Text(
                                                       "Step Sizes",
                                                       style: TextStyle(
                                                           fontSize: 18,
@@ -748,10 +792,14 @@ class _CncControlsState extends State<CncControls> {
                                                     ),
                                                   ),
                                                   Padding(
-                                                    padding: const EdgeInsets
-                                                        .symmetric(
-                                                        horizontal: 20.0,
-                                                        vertical: 10),
+                                                    padding:
+                                                        EdgeInsets.symmetric(
+                                                            horizontal:
+                                                                screenWidth *
+                                                                    0.01,
+                                                            vertical:
+                                                                screenHeight *
+                                                                    0.01),
                                                     child: TextField(
                                                       controller: stepSizeX,
                                                       decoration:
@@ -764,10 +812,14 @@ class _CncControlsState extends State<CncControls> {
                                                     ),
                                                   ),
                                                   Padding(
-                                                    padding: const EdgeInsets
-                                                        .symmetric(
-                                                        horizontal: 20.0,
-                                                        vertical: 10),
+                                                    padding:
+                                                        EdgeInsets.symmetric(
+                                                            horizontal:
+                                                                screenWidth *
+                                                                    0.01,
+                                                            vertical:
+                                                                screenHeight *
+                                                                    0.01),
                                                     child: TextField(
                                                       controller: stepSizeY,
                                                       decoration:
@@ -780,10 +832,14 @@ class _CncControlsState extends State<CncControls> {
                                                     ),
                                                   ),
                                                   Padding(
-                                                    padding: const EdgeInsets
-                                                        .symmetric(
-                                                        horizontal: 20.0,
-                                                        vertical: 10),
+                                                    padding:
+                                                        EdgeInsets.symmetric(
+                                                            horizontal:
+                                                                screenWidth *
+                                                                    0.01,
+                                                            vertical:
+                                                                screenHeight *
+                                                                    0.01),
                                                     child: TextField(
                                                       controller: stepSizeZ,
                                                       decoration:
@@ -797,8 +853,13 @@ class _CncControlsState extends State<CncControls> {
                                                   ),
                                                   Padding(
                                                     padding:
-                                                        const EdgeInsets.all(
-                                                            20.0),
+                                                        EdgeInsets.symmetric(
+                                                            horizontal:
+                                                                screenWidth *
+                                                                    0.01,
+                                                            vertical:
+                                                                screenHeight *
+                                                                    0.01),
                                                     child: Row(
                                                       mainAxisAlignment:
                                                           MainAxisAlignment
@@ -847,12 +908,10 @@ class _CncControlsState extends State<CncControls> {
                             )
                           ],
                         ),
-                        const Padding(
-                          padding: EdgeInsets.all(3.0),
-                          child: Divider(),
-                        ),
+                        const Divider(),
                         Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                          padding: EdgeInsets.symmetric(
+                              horizontal: screenWidth * 0.01),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
@@ -1215,7 +1274,7 @@ class _CncControlsState extends State<CncControls> {
             children: [
               Expanded(
                   child: SizedBox(
-                width: 600,
+                width: screenWidth * 0.3,
                 child: Card(
                   color: Colors.blueGrey.shade800,
                   elevation: 10.0,

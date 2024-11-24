@@ -218,7 +218,7 @@ class OutlineCalculations {
             arcs.add(arc);
           } else if (smd != null) {
             Outlines outline = getSMDLines(lineThickness, startLine, endLine,
-                Offset(smd.x, smd.y) + (smdOffset! * scale), smd);
+                Offset(smd.x, smd.y) + (smdOffset! * scale), smd, false);
             outlines.add(outline);
 
             SMDOutline smdOutline = getSMDOutline(
@@ -252,13 +252,13 @@ class OutlineCalculations {
 
             arcs.add(arc);
           } else if (smd != null) {
-            Outlines outline = getSMDLines(lineThickness, startLine, endLine,
-                Offset(smd.x, smd.y) + (smdOffset! * scale), smd);
+            Outlines outline = getSMDLines(lineThickness, endLine, startLine,
+                Offset(smd.x, smd.y) + (smdOffset! * scale), smd, true);
 
             SMDOutline smdOutline = getSMDOutline(
                 smd,
-                outline.leftStartPoint,
-                outline.rightStartPoint,
+                outline.leftEndPoint,
+                outline.rightEndPoint,
                 Offset(smd.x, smd.y) + (smdOffset! * scale),
                 scale);
 
@@ -371,13 +371,8 @@ class OutlineCalculations {
     passLists(arcs, connectingLines, smds, smdGCode);
   }
 
-  Outlines getSMDLines(
-    double thickness,
-    Offset lineStart,
-    Offset lineEnd,
-    Offset smdCenter,
-    Smd smd,
-  ) {
+  Outlines getSMDLines(double thickness, Offset lineStart, Offset lineEnd,
+      Offset smdCenter, Smd smd, bool isEnd) {
     final double lineThickness = thickness;
     final Offset direction = (lineEnd - smdCenter).normalize();
     final perpendicularOffset =
@@ -397,6 +392,16 @@ class OutlineCalculations {
         lineEnd - perpendicularOffset,
         smdCenter);
 
+    if (isEnd) {
+      return Outlines(
+          leftStartPoint: lineEnd - perpendicularOffset,
+          leftEndPoint: rightEdgeStart,
+          rightStartPoint: lineEnd + perpendicularOffset,
+          rightEndPoint: leftEdgeStart,
+          centerStartPoint: lineStart,
+          centerEndPoint: lineEnd);
+    }
+
     return Outlines(
         leftStartPoint: leftEdgeStart,
         leftEndPoint: lineEnd + perpendicularOffset,
@@ -415,36 +420,6 @@ class OutlineCalculations {
     final Offset topRight = rect.topRight;
     final Offset bottomRight = rect.bottomRight;
     final Offset bottomLeft = rect.bottomLeft;
-
-    if (leftStart.dy == rect.top) {
-      // Entry from top edge
-      smdGCode.add(GCodeLines(startOffset: leftStart, endOffset: topRight));
-      smdGCode.add(GCodeLines(startOffset: topRight, endOffset: bottomRight));
-      smdGCode.add(GCodeLines(startOffset: bottomRight, endOffset: bottomLeft));
-      smdGCode.add(GCodeLines(startOffset: bottomLeft, endOffset: topLeft));
-      smdGCode.add(GCodeLines(startOffset: topLeft, endOffset: rightStart));
-    } else if (leftStart.dx == rect.right) {
-      // Entry from right edge
-      smdGCode.add(GCodeLines(startOffset: leftStart, endOffset: bottomRight));
-      smdGCode.add(GCodeLines(startOffset: bottomRight, endOffset: bottomLeft));
-      smdGCode.add(GCodeLines(startOffset: bottomLeft, endOffset: topLeft));
-      smdGCode.add(GCodeLines(startOffset: topLeft, endOffset: bottomLeft));
-      smdGCode.add(GCodeLines(startOffset: bottomLeft, endOffset: rightStart));
-    } else if (leftStart.dy == rect.bottom) {
-      // Entry from bottom edge
-      smdGCode.add(GCodeLines(startOffset: leftStart, endOffset: bottomLeft));
-      smdGCode.add(GCodeLines(startOffset: bottomLeft, endOffset: topLeft));
-      smdGCode.add(GCodeLines(startOffset: topLeft, endOffset: topRight));
-      smdGCode.add(GCodeLines(startOffset: topRight, endOffset: bottomRight));
-      smdGCode.add(GCodeLines(startOffset: bottomRight, endOffset: rightStart));
-    } else if (leftStart.dx == rect.left) {
-      // Entry from left edge
-      smdGCode.add(GCodeLines(startOffset: leftStart, endOffset: topLeft));
-      smdGCode.add(GCodeLines(startOffset: topLeft, endOffset: topRight));
-      smdGCode.add(GCodeLines(startOffset: topRight, endOffset: bottomRight));
-      smdGCode.add(GCodeLines(startOffset: bottomRight, endOffset: bottomLeft));
-      smdGCode.add(GCodeLines(startOffset: bottomLeft, endOffset: rightStart));
-    }
 
     return SMDOutline(
         topLeft: topLeft,

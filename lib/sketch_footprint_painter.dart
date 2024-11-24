@@ -11,22 +11,15 @@ class FootPrintPainter extends CustomPainter {
   final List<Line> lines;
   final Offset? currentPoint;
   final Offset? startPoint;
-  final Function(List<Arc>, List<ConnectingLines>, List<SMDOutline>, List<GCodeLines>) passLists;
+  final Function(
+          List<Arc>, List<ConnectingLines>, List<SMDOutline>, List<GCodeLines>)
+      passLists;
 
   FootPrintPainter(this.component, this.scale, this.lines, this.currentPoint,
       this.startPoint, this.passLists);
 
-  double lengthChange = 0.1;
-
   @override
   void paint(Canvas canvas, Size size) {
-    OutlineCalculations(
-            footprints: component,
-            lines: lines,
-            scale: scale,
-            passLists: passLists)
-        .calculateOutlines();
-
     // Outer circle paint indicator
     final circlePaint = Paint()
       ..color = Colors.yellow
@@ -48,7 +41,7 @@ class FootPrintPainter extends CustomPainter {
         // line paint
         final linePaint = Paint()
           ..color = Colors.lightGreenAccent.shade700
-          ..strokeWidth = 1.0 * scale
+          ..strokeWidth = lines[i].thickness * scale
           ..style = PaintingStyle.stroke;
 
         Offset start = lines[i].start * scale;
@@ -179,6 +172,13 @@ class FootPrintPainter extends CustomPainter {
           innerPadPaint,
         );
       }
+
+      OutlineCalculations(
+              footprints: component,
+              lines: lines,
+              scale: scale,
+              passLists: passLists)
+          .calculateOutlines();
     }
 
     // Moving this code to another painter for displaying outlines.

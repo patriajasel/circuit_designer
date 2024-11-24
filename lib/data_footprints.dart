@@ -209,7 +209,7 @@ class Smd {
 
   factory Smd.fromJson(Map<String, dynamic> json) {
     return Smd(
-        name: json['name'],
+        name: json['name'] ?? '',
         x: json['x'].toDouble(),
         y: json['y'].toDouble(),
         dx: json['dx'].toDouble(),

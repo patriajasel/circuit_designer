@@ -11,6 +11,8 @@ class StartPage extends StatefulWidget {
 class _StartPageState extends State<StartPage> {
   @override
   Widget build(BuildContext context) {
+    final double screenHeight = MediaQuery.of(context).size.height;
+    final double screenWidth = MediaQuery.of(context).size.width;
     return Scaffold(
       backgroundColor: Colors.grey.shade900,
       body: Row(
@@ -21,8 +23,10 @@ class _StartPageState extends State<StartPage> {
             children: [
               Expanded(
                 child: Container(
-                  width: 300,
-                  margin: const EdgeInsets.all(20.0),
+                  width: screenWidth * 0.25,
+                  margin: EdgeInsets.symmetric(
+                      horizontal: screenWidth * 0.01,
+                      vertical: screenHeight * 0.03),
                   decoration: BoxDecoration(
                       color: Colors.blueGrey.shade900,
                       borderRadius: BorderRadius.circular(10.0)),
@@ -30,16 +34,20 @@ class _StartPageState extends State<StartPage> {
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: [
                       Padding(
-                        padding: const EdgeInsets.all(10.0),
+                        padding: EdgeInsets.symmetric(
+                            horizontal: screenWidth * 0.005,
+                            vertical: screenHeight * 0.015),
                         child: Row(
                           children: [
                             Image.asset(
                               "lib/assets/logo/logo.png",
                               scale: 7,
                             ),
-                            const Padding(
-                              padding: EdgeInsets.only(left: 10),
-                              child: Text(
+                            Padding(
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: screenWidth * 0.005,
+                                  vertical: screenHeight * 0.015),
+                              child: const Text(
                                 "CREATIVE CIRCUITS",
                                 style: TextStyle(
                                     color: Colors.white,
@@ -52,18 +60,32 @@ class _StartPageState extends State<StartPage> {
                         ),
                       ),
                       Container(
-                        margin: const EdgeInsets.only(top: 40),
+                        margin: EdgeInsets.symmetric(
+                            horizontal: screenWidth * 0.02,
+                            vertical: screenHeight * 0.06),
                         child: Column(
                           children: [
-                            _sideMenuOptions("Create PCB Design",
-                                Icons.polyline_rounded, "/Sketch", false),
-                            _sideMenuOptions("Open Existing Design",
-                                Icons.folder_open, "/Sketch", true),
+                            _sideMenuOptions(
+                                "Create PCB Design",
+                                Icons.polyline_rounded,
+                                "/Sketch",
+                                false,
+                                screenHeight,
+                                screenWidth),
+                            _sideMenuOptions(
+                                "Open Existing Design",
+                                Icons.folder_open,
+                                "/Sketch",
+                                true,
+                                screenHeight,
+                                screenWidth),
                             _sideMenuOptions(
                                 "CNC Controls",
                                 Icons.settings_remote_rounded,
                                 "/Controls",
-                                false),
+                                false,
+                                screenHeight,
+                                screenWidth),
                           ],
                         ),
                       ),
@@ -72,10 +94,20 @@ class _StartPageState extends State<StartPage> {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: [
-                            _sideMenuOptions("User Manual",
-                                Icons.menu_book_rounded, "/Sketch", false),
-                            _sideMenuOptions("About Us",
-                                Icons.info_outline_rounded, "/Sketch", false)
+                            _sideMenuOptions(
+                                "User Manual",
+                                Icons.menu_book_rounded,
+                                "/Sketch",
+                                false,
+                                screenHeight,
+                                screenWidth),
+                            _sideMenuOptions(
+                                "About Us",
+                                Icons.info_outline_rounded,
+                                "/Sketch",
+                                false,
+                                screenHeight,
+                                screenWidth)
                           ],
                         ),
                       )
@@ -91,11 +123,13 @@ class _StartPageState extends State<StartPage> {
           //  This is the main section
           Expanded(
             child: Container(
-              margin: const EdgeInsets.all(20.0),
+              margin: EdgeInsets.symmetric(
+                  horizontal: screenWidth * 0.01,
+                  vertical: screenHeight * 0.03),
               decoration: BoxDecoration(
                   color: Colors.blueGrey.shade900,
                   borderRadius: BorderRadius.circular(10.0)),
-              child: const Column(
+              child: Column(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
                   Expanded(
@@ -106,8 +140,10 @@ class _StartPageState extends State<StartPage> {
                           children: [
                             Padding(
                               padding: EdgeInsets.only(
-                                  top: 30.0, left: 20.0, bottom: 10.0),
-                              child: Text(
+                                  top: screenHeight * 0.045,
+                                  left: screenWidth * 0.03,
+                                  bottom: screenHeight * 0.01),
+                              child: const Text(
                                 "RECENT PROJECTS",
                                 style: TextStyle(
                                     fontSize: 20.0,
@@ -118,8 +154,9 @@ class _StartPageState extends State<StartPage> {
                           ],
                         ),
                         Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 15.0),
-                          child: Divider(
+                          padding: EdgeInsets.symmetric(
+                              horizontal: screenWidth * 0.02),
+                          child: const Divider(
                             thickness: 4,
                           ),
                         ),
@@ -137,7 +174,12 @@ class _StartPageState extends State<StartPage> {
 
   //  This is the method for generating Text Navigation buttons.
   MouseRegion _sideMenuOptions(
-      String optionsName, IconData icon, String routeName, bool isImport) {
+      String optionsName,
+      IconData icon,
+      String routeName,
+      bool isImport,
+      double screenHeight,
+      double screenWidth) {
     final hoverNotifier = ValueNotifier<bool>(false);
 
     return MouseRegion(
@@ -147,9 +189,13 @@ class _StartPageState extends State<StartPage> {
         valueListenable: hoverNotifier,
         builder: (context, hover, child) {
           return Container(
-            margin: const EdgeInsets.all(10),
+            margin: EdgeInsets.symmetric(
+                horizontal: screenWidth * 0.005,
+                vertical: screenHeight * 0.015),
             width: double.infinity,
-            padding: const EdgeInsets.all(5),
+            padding: EdgeInsets.symmetric(
+                horizontal: screenWidth * 0.0025,
+                vertical: screenHeight * 0.0075),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(5),
               color:
@@ -170,7 +216,7 @@ class _StartPageState extends State<StartPage> {
                     color: Colors.white,
                     size: 20,
                   ),
-                  const SizedBox(width: 10),
+                  SizedBox(width: screenWidth * 0.0015),
                   Text(
                     optionsName,
                     style: const TextStyle(fontSize: 14.0, color: Colors.white),
@@ -180,27 +226,6 @@ class _StartPageState extends State<StartPage> {
             ),
           );
         },
-      ),
-    );
-  }
-
-  //  This is the section for the Recent project Buttons
-
-  Container _sideIconButtons(IconData icon) {
-    return Container(
-      margin: const EdgeInsets.only(right: 10),
-      decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(10),
-          color: const Color(0xFF5B5B5B)),
-      child: IconButton(
-        onPressed: () {
-          // ! Button action here!
-        },
-        icon: Icon(
-          icon,
-          size: 16.0,
-          color: Colors.white,
-        ),
       ),
     );
   }

@@ -158,6 +158,9 @@ class _SketchboardState extends State<Sketchboard> {
 
   @override
   Widget build(BuildContext context) {
+    final double screenHeight = MediaQuery.of(context).size.height;
+    final double screenWidth = MediaQuery.of(context).size.width;
+
     MenuActions menuActions = MenuActions(
         footprints: compToDisplay,
         lines: lines,
@@ -399,8 +402,8 @@ class _SketchboardState extends State<Sketchboard> {
                             Positioned(
                                 right: 0,
                                 child: SizedBox(
-                                  height: 500,
-                                  width: 100,
+                                  height: screenHeight * 0.5,
+                                  width: screenWidth * 0.05,
                                   child: Card(
                                       elevation: 0,
                                       color: Colors.transparent,
@@ -410,9 +413,9 @@ class _SketchboardState extends State<Sketchboard> {
                                           itemCount: 5,
                                           itemBuilder: (context, index) {
                                             return Container(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                      vertical: 20),
+                                              padding: EdgeInsets.symmetric(
+                                                  vertical:
+                                                      screenHeight * 0.02),
                                               child: Container(
                                                 decoration: BoxDecoration(
                                                   color: isClicked[index]
@@ -463,14 +466,12 @@ class _SketchboardState extends State<Sketchboard> {
                                           })),
                                 )),
                             Positioned(
-                              right: 20.0,
-                              bottom: 20.0,
+                              right: screenWidth * 0.01,
+                              bottom: screenHeight * 0.02,
                               child: ElevatedButton(
                                   onPressed: () async {
                                     await saveDesign(compToDisplay, lines,
                                         context, updateFilePath);
-
-                                    print(fileName);
 
                                     OverallOutline allOutlines = OverallOutline(
                                         connectedLines: lineOutlines!,
@@ -482,7 +483,7 @@ class _SketchboardState extends State<Sketchboard> {
                                             List.from(allOutlines.arcs),
                                             List.from(
                                                 allOutlines.connectedLines),
-                                            smdGCodes!,
+                                            List.from(allOutlines.smdOutline),
                                             scale,
                                             filePath!,
                                             fileName!);
@@ -516,9 +517,11 @@ class _SketchboardState extends State<Sketchboard> {
                                       shape: RoundedRectangleBorder(
                                           borderRadius:
                                               BorderRadius.circular(10.0))),
-                                  child: const Padding(
-                                    padding: EdgeInsets.all(10.0),
-                                    child: Row(
+                                  child: Padding(
+                                    padding: EdgeInsets.symmetric(
+                                        horizontal: screenWidth * 0.005,
+                                        vertical: screenHeight * 0.015),
+                                    child: const Row(
                                       mainAxisAlignment:
                                           MainAxisAlignment.center,
                                       children: [

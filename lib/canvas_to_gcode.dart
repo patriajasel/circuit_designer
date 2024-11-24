@@ -12,6 +12,7 @@ class GCodeConverter {
   Offset? arcCenter;
   bool isPad = false;
   bool isLine = false;
+  bool isSmd = false;
   int? indexToRemove;
   double? radius;
   double? cwI;
@@ -23,13 +24,17 @@ class GCodeConverter {
   Future<void> convertOutlineToGCode(
       List<Arc> arcs,
       List<ConnectingLines> outlines,
-      List<GCodeLines> smdGCodes,
+      List<SMDOutline> smdOutlines,
       double scale,
       String filePath,
       String fileName) async {
     // Prepare gCodeLines based on outlines
     for (var outline in outlines) {
       disperseOutLines(outline);
+    }
+
+    for (var smdLines in smdOutlines) {
+      disperseSmdOutlines(smdLines, scale);
     }
 
     for (int i = 0; i < outlines.length; i++) {
@@ -68,7 +73,7 @@ class GCodeConverter {
             gCodeCommands.add(
                 "${gCode("engrave")} X${(newOffset.dx * 100).round() / 100} Y${(newOffset.dy * 100).round() / 100}");
             currentOffset = newOffset;
-          }
+          } else if (isSmd == true && isPad == false && isLine == false) {}
         } else {
           // Handle the case when newOffset is null.
           print("Warning: newOffset is null. Breaking the loop.");
@@ -142,6 +147,113 @@ class GCodeConverter {
     }
   }
 
+  void disperseSmdOutlines(SMDOutline smdOutline, double scale) {
+    Offset leftLine = smdOutline.connectedLeftLine;
+    Offset rightLine = smdOutline.connectedRightLine;
+    Offset topLeft = smdOutline.topLeft ;
+    Offset topRight = smdOutline.topRight;
+    Offset bottomLeft = smdOutline.bottomLeft ;
+    Offset bottomRight = smdOutline.bottomRight;
+
+    if (leftLine.dx == topLeft.dx) {
+      double distance1 = sqrt(
+          pow(topLeft.dx - leftLine.dx, 2) + pow(topLeft.dy - leftLine.dy, 2));
+      double distance2 = sqrt(pow(bottomLeft.dx - leftLine.dx, 2) +
+          pow(bottomLeft.dy - leftLine.dy, 2));
+
+      if (distance2 < distance1) {
+        gCodeLines
+            .add(GCodeLines(startOffset: leftLine, endOffset: bottomLeft));
+        gCodeLines
+            .add(GCodeLines(startOffset: bottomLeft, endOffset: bottomRight));
+        gCodeLines
+            .add(GCodeLines(startOffset: bottomRight, endOffset: topRight));
+        gCodeLines.add(GCodeLines(startOffset: topRight, endOffset: topLeft));
+        gCodeLines.add(GCodeLines(startOffset: topLeft, endOffset: rightLine));
+      } else {
+        gCodeLines.add(GCodeLines(startOffset: leftLine, endOffset: topLeft));
+        gCodeLines.add(GCodeLines(startOffset: topLeft, endOffset: topRight));
+        gCodeLines
+            .add(GCodeLines(startOffset: topRight, endOffset: bottomRight));
+        gCodeLines
+            .add(GCodeLines(startOffset: bottomRight, endOffset: bottomLeft));
+        gCodeLines
+            .add(GCodeLines(startOffset: bottomLeft, endOffset: rightLine));
+      }
+    } else if (leftLine.dx == topRight.dx) {
+      double distance1 = sqrt(pow(topRight.dx - leftLine.dx, 2) +
+          pow(topRight.dy - leftLine.dy, 2));
+      double distance2 = sqrt(pow(bottomRight.dx - leftLine.dx, 2) +
+          pow(bottomRight.dy - leftLine.dy, 2));
+
+      if (distance2 < distance1) {
+        gCodeLines
+            .add(GCodeLines(startOffset: leftLine, endOffset: bottomRight));
+        gCodeLines
+            .add(GCodeLines(startOffset: bottomRight, endOffset: bottomLeft));
+        gCodeLines.add(GCodeLines(startOffset: bottomLeft, endOffset: topLeft));
+        gCodeLines.add(GCodeLines(startOffset: topLeft, endOffset: topRight));
+        gCodeLines.add(GCodeLines(startOffset: topRight, endOffset: rightLine));
+      } else {
+        gCodeLines.add(GCodeLines(startOffset: leftLine, endOffset: topRight));
+        gCodeLines.add(GCodeLines(startOffset: topRight, endOffset: topLeft));
+        gCodeLines.add(GCodeLines(startOffset: topLeft, endOffset: bottomLeft));
+        gCodeLines
+            .add(GCodeLines(startOffset: bottomLeft, endOffset: bottomRight));
+        gCodeLines
+            .add(GCodeLines(startOffset: bottomRight, endOffset: rightLine));
+      }
+    } else if (leftLine.dy == topRight.dy) {
+      double distance1 = sqrt(pow(topRight.dx - leftLine.dx, 2) +
+          pow(topRight.dy - leftLine.dy, 2));
+      double distance2 = sqrt(
+          pow(topLeft.dx - leftLine.dx, 2) + pow(topLeft.dy - leftLine.dy, 2));
+
+      if (distance2 < distance1) {
+        gCodeLines.add(GCodeLines(startOffset: leftLine, endOffset: topLeft));
+        gCodeLines.add(GCodeLines(startOffset: topLeft, endOffset: bottomLeft));
+        gCodeLines
+            .add(GCodeLines(startOffset: bottomLeft, endOffset: bottomRight));
+        gCodeLines
+            .add(GCodeLines(startOffset: bottomRight, endOffset: topRight));
+        gCodeLines.add(GCodeLines(startOffset: topRight, endOffset: rightLine));
+      } else {
+        gCodeLines.add(GCodeLines(startOffset: leftLine, endOffset: topRight));
+        gCodeLines
+            .add(GCodeLines(startOffset: topRight, endOffset: bottomRight));
+        gCodeLines
+            .add(GCodeLines(startOffset: bottomRight, endOffset: bottomLeft));
+        gCodeLines.add(GCodeLines(startOffset: bottomLeft, endOffset: topLeft));
+        gCodeLines.add(GCodeLines(startOffset: topLeft, endOffset: rightLine));
+      }
+    } else if (leftLine.dy == bottomRight.dy) {
+      double distance1 = sqrt(pow(bottomRight.dx - leftLine.dx, 2) +
+          pow(bottomRight.dy - leftLine.dy, 2));
+      double distance2 = sqrt(pow(bottomLeft.dx - leftLine.dx, 2) +
+          pow(bottomLeft.dy - leftLine.dy, 2));
+
+      if (distance2 < distance1) {
+        gCodeLines
+            .add(GCodeLines(startOffset: leftLine, endOffset: bottomLeft));
+        gCodeLines.add(GCodeLines(startOffset: bottomLeft, endOffset: topLeft));
+        gCodeLines.add(GCodeLines(startOffset: topLeft, endOffset: topRight));
+        gCodeLines
+            .add(GCodeLines(startOffset: topRight, endOffset: bottomRight));
+        gCodeLines
+            .add(GCodeLines(startOffset: bottomRight, endOffset: rightLine));
+      } else {
+        gCodeLines
+            .add(GCodeLines(startOffset: leftLine, endOffset: bottomRight));
+        gCodeLines
+            .add(GCodeLines(startOffset: bottomRight, endOffset: topRight));
+        gCodeLines.add(GCodeLines(startOffset: topRight, endOffset: topLeft));
+        gCodeLines.add(GCodeLines(startOffset: topLeft, endOffset: bottomLeft));
+        gCodeLines
+            .add(GCodeLines(startOffset: bottomLeft, endOffset: rightLine));
+      }
+    }
+  }
+
   // Command keyword mappings
   String gCode(String keyword) {
     switch (keyword) {
@@ -172,6 +284,8 @@ class GCodeConverter {
 
   Offset? checkLines(Offset offset, double scale) {
     for (var line in gCodeLines) {
+      print("Offset: $offset");
+      print("Line Offset: Start: ${line.startOffset} End: ${line.endOffset}");
       if ((line.startOffset.dx / scale) == offset.dx &&
           (line.startOffset.dy / scale) == offset.dy) {
         isLine = true;

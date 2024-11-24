@@ -132,76 +132,184 @@ class OutlinePainter extends CustomPainter {
     Path outlinePath = Path();
 
     if (leftEdgeStart.dy == smdOutline.topLeft.dy) {
-      // Entry from top edge
-      outlinePath.moveTo(leftEdgeStart.dx, leftEdgeStart.dy);
-      outlinePath.lineTo(topRight.dx, topRight.dy);
-      smdGCode!
-          .add(GCodeLines(startOffset: leftEdgeStart, endOffset: topRight));
-      outlinePath.lineTo(bottomRight.dx, bottomRight.dy);
-      smdGCode!.add(GCodeLines(startOffset: topRight, endOffset: bottomRight));
-      outlinePath.lineTo(bottomLeft.dx, bottomLeft.dy);
-      smdGCode!
-          .add(GCodeLines(startOffset: bottomRight, endOffset: bottomLeft));
-      if (leftEdgeStart.dy == rightEdgeStart.dy) {
-        outlinePath.lineTo(topLeft.dx, topLeft.dy);
-        smdGCode!.add(GCodeLines(startOffset: bottomRight, endOffset: topLeft));
-      }
-      outlinePath.lineTo(rightEdgeStart.dx, rightEdgeStart.dy);
-      smdGCode!
-          .add(GCodeLines(startOffset: bottomRight, endOffset: rightEdgeStart));
-    } else if (leftEdgeStart.dx == smdOutline.topRight.dx) {
-      // Entry from right edge
-      outlinePath.moveTo(leftEdgeStart.dx, leftEdgeStart.dy);
-      outlinePath.lineTo(bottomRight.dx, bottomRight.dy);
-      smdGCode!
-          .add(GCodeLines(startOffset: leftEdgeStart, endOffset: bottomRight));
-      outlinePath.lineTo(bottomLeft.dx, bottomLeft.dy);
-      smdGCode!
-          .add(GCodeLines(startOffset: bottomRight, endOffset: bottomLeft));
-      outlinePath.lineTo(topLeft.dx, topLeft.dy);
-      smdGCode!.add(GCodeLines(startOffset: bottomLeft, endOffset: topLeft));
-      if (leftEdgeStart.dx == rightEdgeStart.dx) {
+      double distance1 = sqrt(pow(topLeft.dx - leftEdgeStart.dx, 2) +
+          pow(topLeft.dy - leftEdgeStart.dy, 2));
+      double distance2 = sqrt(pow(topRight.dx - leftEdgeStart.dx, 2) +
+          pow(topRight.dy - leftEdgeStart.dy, 2));
+
+      if (distance2 < distance1) {
+        // Entry from top edge
+        outlinePath.moveTo(leftEdgeStart.dx, leftEdgeStart.dy);
         outlinePath.lineTo(topRight.dx, topRight.dy);
-        smdGCode!.add(GCodeLines(startOffset: topLeft, endOffset: bottomLeft));
-      }
-      outlinePath.lineTo(rightEdgeStart.dx, rightEdgeStart.dy);
-      smdGCode!
-          .add(GCodeLines(startOffset: bottomLeft, endOffset: rightEdgeStart));
-    } else if (leftEdgeStart.dy == smdOutline.bottomRight.dy) {
-      // Entry from bottom edge
-      outlinePath.moveTo(leftEdgeStart.dx, leftEdgeStart.dy);
-      outlinePath.lineTo(bottomLeft.dx, bottomLeft.dy);
-      smdGCode!
-          .add(GCodeLines(startOffset: leftEdgeStart, endOffset: bottomLeft));
-      outlinePath.lineTo(topLeft.dx, topLeft.dy);
-      smdGCode!.add(GCodeLines(startOffset: bottomLeft, endOffset: topLeft));
-      outlinePath.lineTo(topRight.dx, topRight.dy);
-      smdGCode!.add(GCodeLines(startOffset: topLeft, endOffset: topRight));
-      if (leftEdgeStart.dy == rightEdgeStart.dy) {
+        smdGCode!
+            .add(GCodeLines(startOffset: leftEdgeStart, endOffset: topRight));
         outlinePath.lineTo(bottomRight.dx, bottomRight.dy);
         smdGCode!
             .add(GCodeLines(startOffset: topRight, endOffset: bottomRight));
-      }
-      outlinePath.lineTo(rightEdgeStart.dx, rightEdgeStart.dy);
-      smdGCode!
-          .add(GCodeLines(startOffset: bottomRight, endOffset: rightEdgeStart));
-    } else if (leftEdgeStart.dx == smdOutline.bottomLeft.dx) {
-      // Entry from left edge
-      outlinePath.moveTo(leftEdgeStart.dx, leftEdgeStart.dy);
-      outlinePath.lineTo(topLeft.dx, topLeft.dy);
-      smdGCode!.add(GCodeLines(startOffset: leftEdgeStart, endOffset: topLeft));
-      outlinePath.lineTo(topRight.dx, topRight.dy);
-      smdGCode!.add(GCodeLines(startOffset: topLeft, endOffset: topRight));
-      outlinePath.lineTo(bottomRight.dx, bottomRight.dy);
-      smdGCode!.add(GCodeLines(startOffset: topRight, endOffset: bottomRight));
-      if (leftEdgeStart.dx == rightEdgeStart.dx) {
         outlinePath.lineTo(bottomLeft.dx, bottomLeft.dy);
         smdGCode!
             .add(GCodeLines(startOffset: bottomRight, endOffset: bottomLeft));
+        if (leftEdgeStart.dy == rightEdgeStart.dy) {
+          outlinePath.lineTo(topLeft.dx, topLeft.dy);
+          smdGCode!
+              .add(GCodeLines(startOffset: bottomRight, endOffset: topLeft));
+        }
+        outlinePath.lineTo(rightEdgeStart.dx, rightEdgeStart.dy);
+        smdGCode!.add(
+            GCodeLines(startOffset: bottomRight, endOffset: rightEdgeStart));
+      } else {
+        // Entry from top edge
+        outlinePath.moveTo(leftEdgeStart.dx, leftEdgeStart.dy);
+        outlinePath.lineTo(topLeft.dx, topLeft.dy);
+        smdGCode!
+            .add(GCodeLines(startOffset: leftEdgeStart, endOffset: topLeft));
+        outlinePath.lineTo(bottomLeft.dx, bottomLeft.dy);
+        smdGCode!.add(GCodeLines(startOffset: topLeft, endOffset: bottomLeft));
+        outlinePath.lineTo(bottomRight.dx, bottomRight.dy);
+        smdGCode!
+            .add(GCodeLines(startOffset: bottomLeft, endOffset: bottomRight));
+        if (leftEdgeStart.dy == rightEdgeStart.dy) {
+          outlinePath.lineTo(topRight.dx, topRight.dy);
+          smdGCode!
+              .add(GCodeLines(startOffset: bottomRight, endOffset: topRight));
+        }
+        outlinePath.lineTo(rightEdgeStart.dx, rightEdgeStart.dy);
+        smdGCode!
+            .add(GCodeLines(startOffset: topRight, endOffset: rightEdgeStart));
       }
-      outlinePath.lineTo(rightEdgeStart.dx, rightEdgeStart.dy);
-      smdGCode!
-          .add(GCodeLines(startOffset: bottomLeft, endOffset: rightEdgeStart));
+    } else if (leftEdgeStart.dx == smdOutline.topRight.dx) {
+      double distance1 = sqrt(pow(topRight.dx - leftEdgeStart.dx, 2) +
+          pow(topRight.dy - leftEdgeStart.dy, 2));
+      double distance2 = sqrt(pow(bottomRight.dx - leftEdgeStart.dx, 2) +
+          pow(bottomRight.dy - leftEdgeStart.dy, 2));
+
+      if (distance2 < distance1) {
+        // Entry from right edge
+        outlinePath.moveTo(leftEdgeStart.dx, leftEdgeStart.dy);
+        outlinePath.lineTo(bottomRight.dx, bottomRight.dy);
+        smdGCode!.add(
+            GCodeLines(startOffset: leftEdgeStart, endOffset: bottomRight));
+        outlinePath.lineTo(bottomLeft.dx, bottomLeft.dy);
+        smdGCode!
+            .add(GCodeLines(startOffset: bottomRight, endOffset: bottomLeft));
+        outlinePath.lineTo(topLeft.dx, topLeft.dy);
+        smdGCode!.add(GCodeLines(startOffset: bottomLeft, endOffset: topLeft));
+        if (leftEdgeStart.dx == rightEdgeStart.dx) {
+          outlinePath.lineTo(topRight.dx, topRight.dy);
+          smdGCode!
+              .add(GCodeLines(startOffset: topLeft, endOffset: bottomLeft));
+        }
+        outlinePath.lineTo(rightEdgeStart.dx, rightEdgeStart.dy);
+        smdGCode!.add(
+            GCodeLines(startOffset: bottomLeft, endOffset: rightEdgeStart));
+      } else {
+        // Entry from right edge
+        outlinePath.moveTo(leftEdgeStart.dx, leftEdgeStart.dy);
+        outlinePath.lineTo(topRight.dx, topRight.dy);
+        smdGCode!
+            .add(GCodeLines(startOffset: leftEdgeStart, endOffset: topRight));
+        outlinePath.lineTo(topLeft.dx, topLeft.dy);
+        smdGCode!.add(GCodeLines(startOffset: topRight, endOffset: topLeft));
+        outlinePath.lineTo(bottomLeft.dx, bottomLeft.dy);
+        smdGCode!.add(GCodeLines(startOffset: topLeft, endOffset: bottomLeft));
+        if (leftEdgeStart.dx == rightEdgeStart.dx) {
+          outlinePath.lineTo(bottomRight.dx, bottomRight.dy);
+          smdGCode!
+              .add(GCodeLines(startOffset: bottomLeft, endOffset: bottomRight));
+        }
+        outlinePath.lineTo(rightEdgeStart.dx, rightEdgeStart.dy);
+        smdGCode!.add(
+            GCodeLines(startOffset: bottomRight, endOffset: rightEdgeStart));
+      }
+    } else if (leftEdgeStart.dy == smdOutline.bottomRight.dy) {
+      double distance1 = sqrt(pow(bottomRight.dx - leftEdgeStart.dx, 2) +
+          pow(bottomRight.dy - leftEdgeStart.dy, 2));
+      double distance2 = sqrt(pow(bottomLeft.dx - leftEdgeStart.dx, 2) +
+          pow(bottomLeft.dy - bottomLeft.dy, 2));
+
+      if (distance2 < distance1) {
+        // Entry from bottom edge
+        outlinePath.moveTo(leftEdgeStart.dx, leftEdgeStart.dy);
+        outlinePath.lineTo(bottomLeft.dx, bottomLeft.dy);
+        smdGCode!
+            .add(GCodeLines(startOffset: leftEdgeStart, endOffset: bottomLeft));
+        outlinePath.lineTo(topLeft.dx, topLeft.dy);
+        smdGCode!.add(GCodeLines(startOffset: bottomLeft, endOffset: topLeft));
+        outlinePath.lineTo(topRight.dx, topRight.dy);
+        smdGCode!.add(GCodeLines(startOffset: topLeft, endOffset: topRight));
+        if (leftEdgeStart.dy == rightEdgeStart.dy) {
+          outlinePath.lineTo(bottomRight.dx, bottomRight.dy);
+          smdGCode!
+              .add(GCodeLines(startOffset: topRight, endOffset: bottomRight));
+        }
+        outlinePath.lineTo(rightEdgeStart.dx, rightEdgeStart.dy);
+        smdGCode!.add(
+            GCodeLines(startOffset: bottomRight, endOffset: rightEdgeStart));
+      } else {
+        // Entry from bottom edge
+        outlinePath.moveTo(leftEdgeStart.dx, leftEdgeStart.dy);
+        outlinePath.lineTo(bottomRight.dx, bottomRight.dy);
+        smdGCode!.add(
+            GCodeLines(startOffset: leftEdgeStart, endOffset: bottomRight));
+        outlinePath.lineTo(topRight.dx, topRight.dy);
+        smdGCode!
+            .add(GCodeLines(startOffset: bottomRight, endOffset: topRight));
+        outlinePath.lineTo(topLeft.dx, topLeft.dy);
+        smdGCode!.add(GCodeLines(startOffset: topRight, endOffset: topLeft));
+        if (leftEdgeStart.dy == rightEdgeStart.dy) {
+          outlinePath.lineTo(bottomLeft.dx, bottomLeft.dy);
+          smdGCode!
+              .add(GCodeLines(startOffset: topLeft, endOffset: bottomLeft));
+        }
+        outlinePath.lineTo(rightEdgeStart.dx, rightEdgeStart.dy);
+        smdGCode!.add(
+            GCodeLines(startOffset: bottomLeft, endOffset: rightEdgeStart));
+      }
+    } else if (leftEdgeStart.dx == smdOutline.bottomLeft.dx) {
+      double distance1 = sqrt(pow(bottomLeft.dx - leftEdgeStart.dx, 2) +
+          pow(bottomLeft.dy - leftEdgeStart.dy, 2));
+      double distance2 = sqrt(pow(topLeft.dx - leftEdgeStart.dx, 2) +
+          pow(topLeft.dy - leftEdgeStart.dy, 2));
+
+      if (distance2 < distance1) {
+        // Entry from left edge
+        outlinePath.moveTo(leftEdgeStart.dx, leftEdgeStart.dy);
+        outlinePath.lineTo(topLeft.dx, topLeft.dy);
+        smdGCode!
+            .add(GCodeLines(startOffset: leftEdgeStart, endOffset: topLeft));
+        outlinePath.lineTo(topRight.dx, topRight.dy);
+        smdGCode!.add(GCodeLines(startOffset: topLeft, endOffset: topRight));
+        outlinePath.lineTo(bottomRight.dx, bottomRight.dy);
+        smdGCode!
+            .add(GCodeLines(startOffset: topRight, endOffset: bottomRight));
+        if (leftEdgeStart.dx == rightEdgeStart.dx) {
+          outlinePath.lineTo(bottomLeft.dx, bottomLeft.dy);
+          smdGCode!
+              .add(GCodeLines(startOffset: bottomRight, endOffset: bottomLeft));
+        }
+        outlinePath.lineTo(rightEdgeStart.dx, rightEdgeStart.dy);
+        smdGCode!.add(
+            GCodeLines(startOffset: bottomLeft, endOffset: rightEdgeStart));
+      } else {
+        // Entry from left edge
+        outlinePath.moveTo(leftEdgeStart.dx, leftEdgeStart.dy);
+        outlinePath.lineTo(bottomLeft.dx, bottomLeft.dy);
+        smdGCode!
+            .add(GCodeLines(startOffset: leftEdgeStart, endOffset: bottomLeft));
+        outlinePath.lineTo(bottomRight.dx, bottomRight.dy);
+        smdGCode!
+            .add(GCodeLines(startOffset: bottomLeft, endOffset: bottomRight));
+        outlinePath.lineTo(topRight.dx, topRight.dy);
+        smdGCode!
+            .add(GCodeLines(startOffset: bottomRight, endOffset: topRight));
+        if (leftEdgeStart.dx == rightEdgeStart.dx) {
+          outlinePath.lineTo(topLeft.dx, topLeft.dy);
+          smdGCode!.add(GCodeLines(startOffset: topRight, endOffset: topLeft));
+        }
+        outlinePath.lineTo(rightEdgeStart.dx, rightEdgeStart.dy);
+        smdGCode!
+            .add(GCodeLines(startOffset: topLeft, endOffset: rightEdgeStart));
+      }
     }
 
     canvas.drawPath(outlinePath, outlinePaint);

@@ -329,8 +329,8 @@ class _CompAndPartsSectionState extends State<CompAndPartsSection> {
                         onTap: () {
                           setState(() {
                             lines[index].isSelected = !lines[index].isSelected;
+                            widget.rebuildState();
                           });
-                          widget.rebuildState();
                         },
                         child: MouseRegion(
                           onEnter: (PointerEvent event) {
