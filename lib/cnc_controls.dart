@@ -48,6 +48,7 @@ class _CncControlsState extends State<CncControls> {
   bool isSpindleOn = false;
   bool isConnected = false;
   bool isPaused = false;
+  bool isStopped = false;
 
   String portStatus = "Disconnected";
   String? portName;
@@ -199,6 +200,9 @@ class _CncControlsState extends State<CncControls> {
       List<List<String>> gCodeLines, BuildContext context) async {
     for (int i = 0; i < gCodeLines.length; i++) {
       for (int j = 0; j < gCodeLines[i].length; j++) {
+        if (isStopped) {
+          return;
+        }
         bool check = await validateCommand(gCodeLines[i][j]);
         if (check == true) {
           _sendGCode(gCodeLines[i][j]);
@@ -657,6 +661,9 @@ class _CncControlsState extends State<CncControls> {
                                       });
                                       _sendGCode("~");
                                     } else {
+                                      setState(() {
+                                        isStopped = false;
+                                      });
                                       sendCommandLines(
                                           gCodeLinesToSend, context);
                                     }
@@ -682,6 +689,7 @@ class _CncControlsState extends State<CncControls> {
                               ElevatedButton(
                                   onPressed: () {
                                     _sendGCode("M30");
+                                    isStopped = true;
                                   },
                                   style: ElevatedButton.styleFrom(
                                       backgroundColor: Colors.blueGrey.shade600,

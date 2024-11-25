@@ -801,7 +801,7 @@ class _SketchboardState extends State<Sketchboard> {
               end: endPoint!,
               isSelected: false,
               isHovered: false,
-              thickness: 1.0,
+              thickness: 1.5,
               startConnected: startConnected,
               endConnected: endConnected);
 

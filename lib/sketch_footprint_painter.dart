@@ -89,7 +89,7 @@ class FootPrintPainter extends CustomPainter {
       // Line paint for the temporary line
       final tempLinePaint = Paint()
         ..color = Colors.lightGreenAccent.shade700
-        ..strokeWidth = 1.0 * scale
+        ..strokeWidth = 1.5 * scale
         ..style = PaintingStyle.stroke;
 
       Offset scaledStart = startPoint! * scale;
