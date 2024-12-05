@@ -11,6 +11,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_libserialport/flutter_libserialport.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:window_manager/window_manager.dart';
+import 'package:path/path.dart' as p;
 
 class CncControls extends StatefulWidget {
   final List<File>? gCodeFiles;
@@ -66,6 +67,10 @@ class _CncControlsState extends State<CncControls> {
 
   double defaultFeedRate = 500.0;
 
+  String? fileName;
+
+  List<File>? files = [];
+
   @override
   void initState() {
     WindowManager.instance.maximize();
@@ -77,6 +82,10 @@ class _CncControlsState extends State<CncControls> {
       for (var file in widget.gCodeFiles!) {
         parseGCodeFiles(file);
       }
+
+      setState(() {
+        files = List.from(widget.gCodeFiles!);
+      });
     }
 
     super.initState();
@@ -119,6 +128,8 @@ class _CncControlsState extends State<CncControls> {
 
   StreamSubscription<Uint8List>? _subscription;
 
+  Completer<void>? _commandCompleter;
+
   // Method to connect to the selected port
   // Connect to the serial port
   void _connectToPort(String portName) async {
@@ -147,9 +158,7 @@ class _CncControlsState extends State<CncControls> {
         reader = SerialPortReader(selectedPort!);
 
         _subscription = reader!.stream.listen((data) {
-          print('Raw data received: $data');
           final response = String.fromCharCodes(data);
-          print('Converted response: $response');
 
           // Append new data to the buffer
           responseBuffer.write(response);
@@ -164,6 +173,10 @@ class _CncControlsState extends State<CncControls> {
 
             // Print the response to the console
             print('GRBL Response: $grblResponse');
+
+            if (_commandCompleter != null && !_commandCompleter!.isCompleted) {
+              _commandCompleter!.complete();
+            }
           }
         }, onError: (error) {
           print("Error reading from serial port: $error");
@@ -196,23 +209,39 @@ class _CncControlsState extends State<CncControls> {
     }
   }
 
+  // Import the path package
+
   void sendCommandLines(
       List<List<String>> gCodeLines, BuildContext context) async {
     for (int i = 0; i < gCodeLines.length; i++) {
+      // Extract the file name
+      String currentFileName = p.basename(files![i].path);
+
+      setState(() {
+        fileName = currentFileName; // Update the state with the file name
+      });
+
       for (int j = 0; j < gCodeLines[i].length; j++) {
         if (isStopped) {
           return;
         }
+
         bool check = await validateCommand(gCodeLines[i][j]);
         if (check == true) {
-          _sendGCode(gCodeLines[i][j]);
-          await Future.delayed(const Duration(seconds: 2));
+          _commandCompleter =
+              Completer<void>(); // Initialize before each command
+          _sendGCode(gCodeLines[i][j]); // Send the command
+
+          // Wait until the response is received
+          await _commandCompleter!.future;
+
           setState(() {
             textsToDisplay.insert(0, gCodeLines[i][j]);
           });
         } else {
           _sendGCode("G0 X0 Y0 Z50");
           _sendGCode("M30");
+
           int indexI = i;
           int indexJ = j + 1;
           String string2 = gCodeLines[indexI][indexJ];
@@ -222,12 +251,17 @@ class _CncControlsState extends State<CncControls> {
           setState(() {
             textsToDisplay.insert(0, "-> Stopping Process");
             removeGCodes(indexI, indexJ);
+            files!.remove(files![i - 1]);
           });
 
           return;
         }
       }
     }
+
+    setState(() {
+      fileName = null;
+    });
   }
 
   void promptUser(BuildContext context, String string) {
@@ -533,18 +567,18 @@ class _CncControlsState extends State<CncControls> {
                           decoration: BoxDecoration(
                               border:
                                   Border.all(width: 2, color: Colors.white)),
-                          child: const Row(
+                          child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text(
+                              const Text(
                                 "X Axis",
                                 style: TextStyle(
                                     fontWeight: FontWeight.bold,
                                     color: Colors.white),
                               ),
                               Text(
-                                "0.000",
-                                style: TextStyle(color: Colors.white),
+                                "$xValue",
+                                style: const TextStyle(color: Colors.white),
                               )
                             ],
                           ),
@@ -561,18 +595,18 @@ class _CncControlsState extends State<CncControls> {
                           decoration: BoxDecoration(
                               border:
                                   Border.all(width: 2, color: Colors.white)),
-                          child: const Row(
+                          child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text(
+                              const Text(
                                 "Y Axis",
                                 style: TextStyle(
                                     fontWeight: FontWeight.bold,
                                     color: Colors.white),
                               ),
                               Text(
-                                "0.000",
-                                style: TextStyle(color: Colors.white),
+                                "$yValue",
+                                style: const TextStyle(color: Colors.white),
                               )
                             ],
                           ),
@@ -589,18 +623,18 @@ class _CncControlsState extends State<CncControls> {
                           decoration: BoxDecoration(
                               border:
                                   Border.all(width: 2, color: Colors.white)),
-                          child: const Row(
+                          child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text(
+                              const Text(
                                 "Z Axis",
                                 style: TextStyle(
                                     fontWeight: FontWeight.bold,
                                     color: Colors.white),
                               ),
                               Text(
-                                "0.000",
-                                style: TextStyle(color: Colors.white),
+                                "$zValue",
+                                style: const TextStyle(color: Colors.white),
                               )
                             ],
                           ),
@@ -1290,9 +1324,9 @@ class _CncControlsState extends State<CncControls> {
                       borderRadius: BorderRadius.circular(10)),
                   child: Column(
                     children: [
-                      const Text(
-                        "Console",
-                        style: TextStyle(
+                      Text(
+                        "Console ${fileName ?? ''}",
+                        style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 20,
                             color: Colors.white),
@@ -1314,11 +1348,8 @@ class _CncControlsState extends State<CncControls> {
                                     const Divider(
                                         color: Colors.grey, thickness: 1),
                                 itemBuilder: (context, index) {
-                                  int reversedIndex =
-                                      gCodeLinesToDisplay.length - 1 - index;
-
                                   List<String> subList =
-                                      gCodeLinesToDisplay[reversedIndex];
+                                      gCodeLinesToDisplay[index];
 
                                   return Padding(
                                     padding: const EdgeInsets.symmetric(

@@ -18,6 +18,9 @@ class FootPrintPainter extends CustomPainter {
   FootPrintPainter(this.component, this.scale, this.lines, this.currentPoint,
       this.startPoint, this.passLists);
 
+  Set lineOffsets = {};
+  List<List<Line>> connectedLines = [];
+
   @override
   void paint(Canvas canvas, Size size) {
     // Outer circle paint indicator

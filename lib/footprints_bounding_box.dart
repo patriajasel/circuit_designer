@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:circuit_designer/data_footprints.dart';
 
 class BoundingBox {
@@ -19,6 +21,13 @@ class BoundingBox {
       'maxX': maxX,
       'maxY': maxY,
     };
+  }
+
+  bool contains(Offset point) {
+    return point.dx >= minX &&
+        point.dx <= maxX &&
+        point.dy >= minY &&
+        point.dy <= maxY;
   }
 
   // fromJson method to convert JSON map back to object

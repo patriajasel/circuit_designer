@@ -21,7 +21,14 @@ import 'data_footprints.dart';
 class Sketchboard extends StatefulWidget {
   final List<DraggableFootprints>? footprintsFromJson;
   final List<Line>? linesFromJson;
-  const Sketchboard({super.key, this.footprintsFromJson, this.linesFromJson});
+  final String? filePathFromJson;
+  final String? fileNameFromJson;
+  const Sketchboard(
+      {super.key,
+      this.footprintsFromJson,
+      this.linesFromJson,
+      this.filePathFromJson,
+      this.fileNameFromJson});
 
   @override
   State<Sketchboard> createState() => _SketchboardState();
@@ -40,6 +47,7 @@ class _SketchboardState extends State<Sketchboard> {
   List<DraggableFootprints> compToDisplay = [];
 
   DraggableFootprints? selectedFootprint;
+  Line? selectedLine;
   List<Line>? selectedLines;
 
   bool isTracing = false;
@@ -75,6 +83,15 @@ class _SketchboardState extends State<Sketchboard> {
   void initState() {
     WindowManager.instance.maximize();
     WindowManager.instance.setMaximizable(true);
+
+    if (widget.filePathFromJson != null) {
+      setState(() {
+        WindowManager.instance
+            .setTitle("Creative Circuits - ${widget.fileNameFromJson}");
+        filePath = widget.filePathFromJson;
+        fileName = widget.fileNameFromJson;
+      });
+    }
 
     loadJsonFiles();
     focusNode.requestFocus();
@@ -165,7 +182,9 @@ class _SketchboardState extends State<Sketchboard> {
         footprints: compToDisplay,
         lines: lines,
         context: context,
-        sendPath: updateFilePath);
+        sendPath: updateFilePath,
+        path: filePath,
+        sketchName: fileName);
     Offset position = Offset(canvasWidthInPixels / 2, canvasHeightInPixels / 2);
 
     return Scaffold(
@@ -471,7 +490,8 @@ class _SketchboardState extends State<Sketchboard> {
                               child: ElevatedButton(
                                   onPressed: () async {
                                     await saveDesign(compToDisplay, lines,
-                                        context, updateFilePath);
+                                        context, updateFilePath,
+                                        fileName: fileName, filePath: filePath);
 
                                     OverallOutline allOutlines = OverallOutline(
                                         connectedLines: lineOutlines!,
@@ -653,9 +673,11 @@ class _SketchboardState extends State<Sketchboard> {
   }
 
   void outlineButton() {
-    setState(() {
-      displayOutline = !displayOutline;
-    });
+    for (var line in lines) {
+      print("Line # ${lines.indexOf(line)}");
+      print("Line Start: ${line.start}");
+      print("Line End: ${line.end}");
+    }
   }
 
   DraggableFootprints? getComponentAtPosition(Offset localPosition) {
@@ -709,6 +731,30 @@ class _SketchboardState extends State<Sketchboard> {
     return null;
   }
 
+  // Helper function: Checks if a point is within the line's "hitbox"
+  bool isPointNearLine(
+      Offset point, Offset start, Offset end, double thickness) {
+    double lineLengthSquared = (end - start).distanceSquared;
+
+    // Handle zero-length line (if start and end are the same)
+    if (lineLengthSquared == 0) {
+      return (point - start).distance <= thickness / 2;
+    }
+
+    // Calculate the projection of the point onto the line segment
+    double t = ((point.dx - start.dx) * (end.dx - start.dx) +
+            (point.dy - start.dy) * (end.dy - start.dy)) /
+        lineLengthSquared;
+    t = t.clamp(0.0, 1.0); // Clamp to ensure projection is on the segment
+
+    // Find the closest point on the line segment
+    Offset closestPoint = Offset(
+        start.dx + t * (end.dx - start.dx), start.dy + t * (end.dy - start.dy));
+
+    // Check if the point is within the "thickness zone" around the line
+    return (point - closestPoint).distance <= thickness / 2;
+  }
+
   List<Line>? getLinesAtPosition(Offset localPosition) {
     List<Line> getLines = [];
     const double hitboxSize =
@@ -722,13 +768,19 @@ class _SketchboardState extends State<Sketchboard> {
       }
 
       // Check proximity to end point
-      if ((localPosition.dx - line.end.dx).abs() < hitboxSize &&
+      else if ((localPosition.dx - line.end.dx).abs() < hitboxSize &&
           (localPosition.dy - line.end.dy).abs() < hitboxSize) {
+        getLines.add(line);
+      }
+
+      // Check if the localPosition is near the line segment itself
+      else if (isPointNearLine(
+          localPosition, line.start, line.end, line.thickness)) {
         getLines.add(line);
       }
     }
 
-    // Return the list of found lines or an empty list if none were found
+    // Return the list of found lines or null if none were found
     return getLines.isNotEmpty ? getLines : null;
   }
 
@@ -794,6 +846,9 @@ class _SketchboardState extends State<Sketchboard> {
 
       if (startPoint != null && endPoint != null) {
         setState(() {
+          // Check if there is a line at the clicked position
+          selectedLines = getLinesAtPosition(details.localPosition / scale);
+
           // Create a new line
           Line newLine = Line(
               name: "Traces ${lines.length}",
@@ -823,12 +878,20 @@ class _SketchboardState extends State<Sketchboard> {
 
         if (selectedFootprint != null) {
           selectedFootprint?.isSelected = !selectedFootprint!.isSelected;
+        } else {
+          for (var component in compToDisplay) {
+            component.isSelected = false;
+          }
         }
 
         selectedLines = getLinesAtPosition(details.localPosition / scale);
         if (selectedLines != null) {
           for (var line in selectedLines!) {
             line.isSelected = true;
+          }
+        } else {
+          for (var line in lines) {
+            line.isSelected = false;
           }
         }
       });

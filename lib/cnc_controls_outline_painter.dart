@@ -38,7 +38,6 @@ class OutlinePainter extends CustomPainter {
     }
 
     if (arcs.isNotEmpty) {
-      print("Arc is not Empty");
       final paint = Paint()
         ..color = Colors.blue
         ..strokeWidth = 1.0

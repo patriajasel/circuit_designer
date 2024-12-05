@@ -17,12 +17,16 @@ class MenuActions {
   List<Line>? lines;
   BuildContext context;
   Function(String, String) sendPath;
+  String? path;
+  String? sketchName;
 
   MenuActions(
       {this.footprints,
       this.lines,
       required this.context,
-      required this.sendPath});
+      required this.sendPath,
+      this.path,
+      this.sketchName});
 
   Map<LogicalKeySet, Intent> buildShortcuts() {
     return {
@@ -60,7 +64,8 @@ class MenuActions {
               print('Open Design clicked');
               break;
             case 'save':
-              saveDesign(footprints!, lines!, context, sendPath);
+              saveDesign(footprints!, lines!, context, sendPath,
+                  filePath: path, fileName: sketchName);
               break;
             case 'cut':
               print('Cut clicked');
@@ -97,9 +102,9 @@ class MenuActions {
             shortcut: 'Ctrl + O'),
         const Divider(),
         _addMenuItem(
-            'Save', () => saveDesign(footprints!, lines!, context, sendPath),
-            shortcut: 'Ctrl + S'),
-        _addMenuItem('Save As', () => print('Exit clicked'),
+            'Save',
+            () => saveDesign(footprints!, lines!, context, sendPath,
+                filePath: path, fileName: sketchName),
             shortcut: 'Ctrl + S'),
         const Divider(),
         _addMenuItem('Import', () => print('Exit clicked')),
@@ -354,8 +359,14 @@ class ActivateIntent extends Intent {
   final String action;
 }
 
-Future<void> saveDesign(List<DraggableFootprints> footprints, List<Line> lines,
-    BuildContext context, Function(String, String) sendPath) async {
+Future<void> saveDesign(
+  List<DraggableFootprints> footprints,
+  List<Line> lines,
+  BuildContext context,
+  Function(String, String) sendPath, {
+  String? filePath,
+  String? fileName,
+}) async {
   try {
     // Convert footprints and lines to JSON
     Map<String, dynamic> designData = {
@@ -366,37 +377,57 @@ Future<void> saveDesign(List<DraggableFootprints> footprints, List<Line> lines,
     // Serialize the combined JSON data
     String jsonString = jsonEncode(designData);
 
-    // Determine the directory and file name
-    Directory? documentsDir = Directory(Platform.isWindows
-        ? "${Platform.environment['USERPROFILE']}\\Documents"
-        : "${Platform.environment['HOME']}/Documents");
+    String finalFilePath;
+    String folderPath;
+    String finalFileName;
 
-    Directory appFolder = Directory('${documentsDir.path}/CC-Projects');
+    print("FilePath Menu: $filePath");
+    print("FileName Menu: $fileName");
 
-    // Create the CC-Projects folder if it doesn't exist
-    if (!appFolder.existsSync()) {
-      await appFolder.create(recursive: true);
+    if (filePath != null && fileName != null) {
+      // Use the provided file path and name
+      folderPath = filePath;
+      finalFileName = fileName;
+      finalFilePath = '$folderPath/$finalFileName';
+    } else {
+      // Default logic: create a new folder and generate file name
+      Directory? documentsDir = Directory(Platform.isWindows
+          ? "${Platform.environment['USERPROFILE']}\\Documents"
+          : "${Platform.environment['HOME']}/Documents");
+
+      Directory appFolder = Directory('${documentsDir.path}/CC-Projects');
+
+      // Create the CC-Projects folder if it doesn't exist
+      if (!appFolder.existsSync()) {
+        await appFolder.create(recursive: true);
+      }
+
+      // Generate a random folder name
+      String randomFolderName = 'Project-${_generateRandomString(8)}';
+      Directory projectFolder =
+          Directory('${appFolder.path}/$randomFolderName');
+
+      // Create the project folder
+      if (!projectFolder.existsSync()) {
+        await projectFolder.create(recursive: true);
+      }
+
+      // Generate a file name with a timestamp
+      folderPath = projectFolder.path;
+      finalFileName = '$randomFolderName-design.cc';
+      finalFilePath = '$folderPath/$finalFileName';
+
+      // Notify the caller about the new path
+      sendPath(projectFolder.path, randomFolderName);
     }
 
-    // Generate a random folder name
-    String randomFolderName = 'Project-${_generateRandomString(8)}';
-    Directory projectFolder = Directory('${appFolder.path}/$randomFolderName');
-
-    // Create the project folder
-    if (!projectFolder.existsSync()) {
-      await projectFolder.create(recursive: true);
-    }
-
-    // Save the file with a timestamp for uniqueness
-    String filePath = '${projectFolder.path}/$randomFolderName-design.cc';
-    sendPath(projectFolder.path, randomFolderName);
-
-    // Write the JSON data to the file
-    File file = File(filePath);
+    // Write the JSON data to the file (overwriting if it exists)
+    File file = File(finalFilePath);
     await file.writeAsString(jsonString);
 
-    // Show a dialog with a button to open the directory
-    _showOpenDirectoryDialog(context, projectFolder.path);
+    // Show a dialog with a button to open the directory if a new folder was created
+
+    _showOpenDirectoryDialog(context, folderPath);
   } catch (e) {
     print('Error saving design: $e');
   }
@@ -471,6 +502,13 @@ Future<void> importDesign(BuildContext context) async {
     String filePath = result.files.single.path!;
     print('Selected file: $filePath');
 
+    // Extract only the directory path (without the file name)
+    String directoryPath = File(filePath).parent.path;
+    print('Directory path: $directoryPath');
+
+    String fileName = result.files.single.name;
+    print('File name: $fileName');
+
     // Open the file and read its content
     File file = File(filePath);
     String fileContent = await file.readAsString();
@@ -498,7 +536,11 @@ Future<void> importDesign(BuildContext context) async {
         context,
         MaterialPageRoute(
             builder: (builder) => Sketchboard(
-                linesFromJson: lines, footprintsFromJson: footprints)));
+                  linesFromJson: lines,
+                  footprintsFromJson: footprints,
+                  filePathFromJson: directoryPath,
+                  fileNameFromJson: fileName,
+                )));
   } catch (e) {
     print('Error reading or parsing file: $e');
   }

@@ -33,22 +33,21 @@ class Line {
         'thickness': thickness,
         'startConnected': startConnected,
         'endConnected': endConnected,
-        'moveStart': moveStart,
+        'moveStart': moveStart
       };
 
   // fromJson for Line
   factory Line.fromJson(Map<String, dynamic> json) {
     return Line(
-      name: json['name'],
-      start: Offset(json['start']['dx'], json['start']['dy']),
-      end: Offset(json['end']['dx'], json['end']['dy']),
-      isSelected: json['isSelected'],
-      isHovered: json['isHovered'],
-      thickness: json['thickness'],
-      startConnected: json['startConnected'],
-      endConnected: json['endConnected'],
-      moveStart: json['moveStart'],
-    );
+        name: json['name'],
+        start: Offset(json['start']['dx'], json['start']['dy']),
+        end: Offset(json['end']['dx'], json['end']['dy']),
+        isSelected: json['isSelected'],
+        isHovered: json['isHovered'],
+        thickness: json['thickness'],
+        startConnected: json['startConnected'],
+        endConnected: json['endConnected'],
+        moveStart: json['moveStart']);
   }
 }
 

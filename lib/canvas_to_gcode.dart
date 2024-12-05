@@ -4,6 +4,7 @@ import 'dart:ui';
 
 import 'package:circuit_designer/line_traces.dart';
 import 'package:circuit_designer/outline_carve.dart';
+import 'package:intl/intl.dart';
 
 class GCodeConverter {
   List<List<String>> compiledGcodeCommands = [];
@@ -46,15 +47,14 @@ class GCodeConverter {
       if (i == 0) {
         gCodeCommands.add(gCode("millimeters"));
         gCodeCommands.add(gCode("absolute"));
-        gCodeCommands.add("G0 Z10 F1000;");
         gCodeCommands.add(gCode("home"));
       }
 
-      gCodeCommands.add("G0 Z10 F1000;");
-      gCodeCommands.add(
-          "${gCode("move")} X${(firstOffset.dx * 100).round() / 100} Y${(firstOffset.dy * 100).round() / 100} F1000");
+      gCodeCommands.add("G0 Z10.0;");
+      gCodeCommands
+          .add("${gCode("move")} X${firstOffset.dx} Y${firstOffset.dy}");
       gCodeCommands.add("M3;");
-      gCodeCommands.add("G0 Z-0.1 F100;");
+      gCodeCommands.add("G0 Z-0.1;");
 
       currentOffset = outlines[i].connectingLines.first.leftStartPoint / scale;
       do {
@@ -66,12 +66,12 @@ class GCodeConverter {
           if (isPad == true && isLine == false) {
             arcs.removeAt(indexToRemove!);
             gCodeCommands.add(
-                "${gCode("arcCW")} X${(newOffset.dx * 100).round() / 100} Y${(newOffset.dy * 100).round() / 100} I$cwI J$cwJ");
+                "${gCode("arcCW")} X${NumberFormat("#.####").format(newOffset.dx)} Y${NumberFormat("#.####").format(newOffset.dy)} I${NumberFormat("#.####").format(cwI)} J${NumberFormat("#.####").format(cwJ)}");
             currentOffset = newOffset;
           } else if (isLine == true && isPad == false) {
             gCodeLines.removeAt(indexToRemove!);
             gCodeCommands.add(
-                "${gCode("engrave")} X${(newOffset.dx * 100).round() / 100} Y${(newOffset.dy * 100).round() / 100}");
+                "${gCode("engrave")} X${NumberFormat("#.####").format(newOffset.dx)} Y${NumberFormat("#.####").format(newOffset.dy)} F100");
             currentOffset = newOffset;
           } else if (isSmd == true && isPad == false && isLine == false) {}
         } else {
@@ -83,10 +83,16 @@ class GCodeConverter {
       } while (currentOffset != firstOffset);
     }
 
-    gCodeCommands.add("G0 Z10 F1000;");
+    gCodeCommands.add("G0 Z10.0;");
 
     gCodeCommands.add("M5"); // Stop spindle
     gCodeCommands.add("M30"); // End of program
+
+    if (fileName.endsWith('-design.cc')) {
+      fileName = fileName.replaceAll('-design.cc', '');
+    }
+
+    print("Trimmed FileName GCode: $fileName");
 
     await saveGcodeFile(
       filePath,
@@ -97,7 +103,6 @@ class GCodeConverter {
 
   Future<void> arcHoleToGCode(
       List<Arc> arcs, double scale, String filePath, String fileName) async {
-    print("Creating Drill codes");
     Set<double> drillSizes = {};
 
     for (var arc in arcs) {
@@ -113,14 +118,14 @@ class GCodeConverter {
       gCodeCommands.add("(${uniqueDrillSizes[i]})");
       gCodeCommands.add(gCode("millimeters"));
       gCodeCommands.add(gCode("absolute"));
-      gCodeCommands.add("G0 Z10 F1000;");
+      gCodeCommands.add("G0 Z10;");
       gCodeCommands.add(gCode("home"));
 
       for (var arc in arcs) {
         if (uniqueDrillSizes[i] == (arc.radius / scale) / 2) {
           gCodeCommands.add("G0 Z5");
           gCodeCommands.add(
-              '${gCode("move")} X${((arc.centerPoint.dx / scale) * 100).round() / 100} Y${((arc.centerPoint.dy / scale) * 100).round() / 100} F1000');
+              '${gCode("move")} X${(arc.centerPoint.dx / scale)} Y${(arc.centerPoint.dy / scale)}');
 
           gCodeCommands.add("G0 Z5");
           gCodeCommands.add("M3;");
@@ -128,10 +133,17 @@ class GCodeConverter {
         }
       }
 
-      gCodeCommands.add("G0 Z30 F1000;");
+      gCodeCommands.add("G0 Z50 F1000;");
+      gCodeCommands.add("G0 X0 Y0 F1000;");
 
       gCodeCommands.add("M5");
       gCodeCommands.add("M30");
+
+      if (fileName.endsWith('-design.cc')) {
+        fileName = fileName.replaceAll('-design.cc', '');
+      }
+
+      print("Trimmed FileName GCode: $fileName");
 
       // save file inside here
       await saveGcodeFile(filePath, "$fileName-drill($i)", gCodeCommands);
@@ -150,9 +162,9 @@ class GCodeConverter {
   void disperseSmdOutlines(SMDOutline smdOutline, double scale) {
     Offset leftLine = smdOutline.connectedLeftLine;
     Offset rightLine = smdOutline.connectedRightLine;
-    Offset topLeft = smdOutline.topLeft ;
+    Offset topLeft = smdOutline.topLeft;
     Offset topRight = smdOutline.topRight;
-    Offset bottomLeft = smdOutline.bottomLeft ;
+    Offset bottomLeft = smdOutline.bottomLeft;
     Offset bottomRight = smdOutline.bottomRight;
 
     if (leftLine.dx == topLeft.dx) {
@@ -284,8 +296,6 @@ class GCodeConverter {
 
   Offset? checkLines(Offset offset, double scale) {
     for (var line in gCodeLines) {
-      print("Offset: $offset");
-      print("Line Offset: Start: ${line.startOffset} End: ${line.endOffset}");
       if ((line.startOffset.dx / scale) == offset.dx &&
           (line.startOffset.dy / scale) == offset.dy) {
         isLine = true;
@@ -369,6 +379,9 @@ class GCodeConverter {
   Future<void> saveGcodeFile(
       String customPath, String fileName, List<String> gcodeCommands) async {
     try {
+      print("FileName GCode: $fileName");
+      print("FileName GCode: $customPath");
+
       // Create the directory within the custom path
       String fullFolderPath = '$customPath/GCode';
       Directory folder = Directory(fullFolderPath);
