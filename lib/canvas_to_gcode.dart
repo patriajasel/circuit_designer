@@ -71,7 +71,7 @@ class GCodeConverter {
           } else if (isLine == true && isPad == false) {
             gCodeLines.removeAt(indexToRemove!);
             gCodeCommands.add(
-                "${gCode("engrave")} X${NumberFormat("#.####").format(newOffset.dx)} Y${NumberFormat("#.####").format(newOffset.dy)} F100");
+                "${gCode("engrave")} X${NumberFormat("#.####").format(newOffset.dx)} Y${NumberFormat("#.####").format(newOffset.dy)} F1000");
             currentOffset = newOffset;
           } else if (isSmd == true && isPad == false && isLine == false) {}
         } else {
@@ -129,7 +129,7 @@ class GCodeConverter {
 
           gCodeCommands.add("G0 Z5");
           gCodeCommands.add("M3;");
-          gCodeCommands.add("G1 Z-1.2 F100");
+          gCodeCommands.add("G1 Z-1.2 F1000");
         }
       }
 
